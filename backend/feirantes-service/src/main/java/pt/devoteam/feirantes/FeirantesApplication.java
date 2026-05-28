@@ -1,4 +1,4 @@
-package pt.poc.feirantes;
+package pt.devoteam.feirantes;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
