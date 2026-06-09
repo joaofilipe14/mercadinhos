@@ -1,0 +1,221 @@
+networks:
+  mercadinhos-net:
+    driver: bridge
+
+volumes:
+  pgdata_identidade:
+  pgdata_municipios:
+  pgdata_mercados:
+  pgdata_cidadaos:
+
+services:
+  # ==========================================
+  # 1. CAMADA DE BASES DE DADOS (POSTGRES)
+  # ==========================================
+
+  # Nova Base de Dados para logins e perfis (Tabela Única)
+  postgres-identidade:
+    image: postgres:16-alpine
+    container_name: postgres-identidade
+    environment:
+      POSTGRES_DB: db_identidade
+      POSTGRES_USER: user_identidade
+      POSTGRES_PASSWORD: pwd_identidade
+    ports:
+      - "5432:5432"
+    networks:
+      - mercadinhos-net
+    volumes:
+      - pgdata_identidade:/var/lib/postgresql/data
+
+  # Base de Dados institucional
+  postgres-municipios:
+    image: postgres:16-alpine
+    container_name: postgres-municipios
+    environment:
+      POSTGRES_DB: db_municipios
+      POSTGRES_USER: user_municipios
+      POSTGRES_PASSWORD: pwd_municipios
+    ports:
+      - "5433:5432"
+    networks:
+      - mercadinhos-net
+    volumes:
+      - pgdata_municipios:/var/lib/postgresql/data
+
+  # O novo coração do sistema (Vagas, Feiras e PDFs)
+  postgres-mercados:
+    image: postgres:16-alpine
+    container_name: postgres-mercados
+    environment:
+      POSTGRES_DB: db_mercados
+      POSTGRES_USER: user_mercados
+      POSTGRES_PASSWORD: pwd_mercados
+    ports:
+      - "5434:5432"
+    networks:
+      - mercadinhos-net
+    volumes:
+      - pgdata_mercados:/var/lib/postgresql/data
+
+  # Base de Dados para o Cidadão (Favoritos e Avaliações)
+  postgres-cidadaos:
+    image: postgres:16-alpine
+    container_name: postgres-cidadaos
+    environment:
+      POSTGRES_DB: db_cidadaos
+      POSTGRES_USER: user_cidadaos
+      POSTGRES_PASSWORD: pwd_cidadaos
+    ports:
+      - "5435:5432"
+    networks:
+      - mercadinhos-net
+    volumes:
+      - pgdata_cidadaos:/var/lib/postgresql/data
+
+  # Mensageria / Eventos (Mantém-se igual)
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: markets-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REREPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "1025:1025" # Porta SMTP (Onde o Spring liga para enviar)
+      - "8025:8025" # Porta HTTP (Onde tu entras para ler no browser)
+    networks:
+      - mercadinhos-net
+
+  # ==========================================
+  # 2. CAMADA DE MICROSSERVIÇOS (BACKEND)
+  # ==========================================
+  municipios-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - SERVICE_NAME=municipios-service
+    container_name: municipios-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-municipios:5432/db_municipios
+      - SPRING_DATASOURCE_USERNAME=user_municipios
+      - SPRING_DATASOURCE_PASSWORD=pwd_municipios
+    networks:
+      - mercadinhos-net
+    depends_on:
+      - postgres-municipios
+
+  mercados-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - SERVICE_NAME=mercados-service
+    container_name: mercados-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-mercados:5432/db_mercados
+      - SPRING_DATASOURCE_USERNAME=user_mercados
+      - SPRING_DATASOURCE_PASSWORD=pwd_mercados
+    networks:
+      - mercadinhos-net
+    depends_on:
+      - postgres-mercados
+
+  cidadaos-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - SERVICE_NAME=cidadaos-service
+    container_name: cidadaos-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-cidadaos:5432/db_cidadaos
+      - SPRING_DATASOURCE_USERNAME=user_cidadaos
+      - SPRING_DATASOURCE_PASSWORD=pwd_cidadaos
+    networks:
+      - mercadinhos-net
+    depends_on:
+      - postgres-cidadaos
+
+  # ==========================================
+  # 3. API GATEWAY & AUTH (IDENTIDADE)
+  # ==========================================
+  identidade-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - SERVICE_NAME=identidade-service
+    container_name: identidade-service
+    ports:
+      - "8080:8080" # Porta principal que o Angular vai consumir
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-identidade:5432/db_identidade
+      - SPRING_DATASOURCE_USERNAME=user_identidade
+      - SPRING_DATASOURCE_PASSWORD=pwd_identidade
+    networks:
+      - mercadinhos-net
+    depends_on:
+      - postgres-identidade
+      - municipios-service
+      - mercados-service
+      - cidadaos-service
+
+  notificacoes-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - SERVICE_NAME=notificacoes-service
+    container_name: notificacoes-service
+    ports:
+      - "8084:8084" # Porta interna exposta para o serviço de notificações
+    environment:
+      # Dizemos ao Spring Boot onde está o broker do Kafka para ele ouvir os tópicos
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      # Configuração reativa das variáveis do Mailhog
+      - SPRING_MAIL_HOST=mailhog
+      - SPRING_MAIL_PORT=1025
+    networks:
+      - mercadinhos-net
+    depends_on:
+      - kafka
+      - mailhog
+  # ==========================================
+  # 4. FRONTEND (ANGULAR)
+  # ==========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend-ui
+    ports:
+      - "4200:80"
+    networks:
+      - mercadinhos-net
+    depends_on:
+      - identidade-service

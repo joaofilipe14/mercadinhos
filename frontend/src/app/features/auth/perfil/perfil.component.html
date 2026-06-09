@@ -1,0 +1,150 @@
+<div class="max-w-5xl mx-auto p-6 font-sans selection:bg-brand-secondary selection:text-white">
+
+  <div class="mb-8 border-b border-slate-100 pb-5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div>
+      @if (currentUser()?.role === 'ROLE_MUNICIPO') {
+      <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
+          🏛️ Perfil Institucional / Autarquia
+        </span>
+      <h1 class="text-3xl font-extrabold text-brand-dark tracking-tight mt-1">Gabinete Municipal</h1>
+      <p class="text-sm text-slate-400">Configure as informações institucionais, contactos da Câmara e dados de verificação concelhia.</p>
+      } @else if (currentUser()?.role === 'ROLE_FEIRANTE') {
+      <span class="text-[10px] font-black text-brand-secondary uppercase tracking-widest bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
+          💼 Conta Corporativa / Feirante
+        </span>
+      <h1 class="text-3xl font-extrabold text-brand-dark tracking-tight mt-1">Painel do Feirante</h1>
+      <p class="text-sm text-slate-400">Gerencie a sua firma, dados de faturação e portefólio de documentos oficiais.</p>
+      } @else {
+      <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md">
+          👤 Utilizador / Público Geral
+        </span>
+      <h1 class="text-3xl font-extrabold text-brand-dark tracking-tight mt-1">A minha Conta</h1>
+      <p class="text-sm text-slate-400">Mantenha os seus dados pessoais atualizados para interações no ecossistema.</p>
+      }
+    </div>
+  </div>
+
+  @if (mensagemSucesso()) {
+  <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2 animate-fade-in">
+    <span>🎉</span> {{ mensagemSucesso() }}
+  </div>
+  }
+  @if (mensagemErro()) {
+  <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-2 animate-fade-in">
+    <span>⚠️</span> {{ mensagemErro() }}
+  </div>
+  }
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div [ngClass]="currentUser()?.role === 'ROLE_FEIRANTE' ? 'lg:col-span-2' : 'lg:col-span-3'"
+         class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
+
+      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-3">
+        Informações Complementares da Base de Dados
+      </h3>
+
+      <form [formGroup]="perfilForm" (ngSubmit)="guardarDadosFiscais()" class="space-y-4">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">
+              @if (currentUser()?.role === 'ROLE_MUNICIPO') { Nome do Município / Câmara }
+              @else if (currentUser()?.role === 'ROLE_FEIRANTE') { Designação Comercial / Firma }
+              @else { Nome Completo }
+            </label>
+            <input type="text" formControlName="nome" class="input-field w-full" placeholder="Insira a designação oficial" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">E-mail de Acesso (Imutável)</label>
+            <input type="text" formControlName="email" class="input-field w-full bg-slate-50 text-slate-400 cursor-not-allowed" />
+          </div>
+        </div>
+
+        @if (currentUser()?.role === 'ROLE_FEIRANTE' || currentUser()?.role === 'ROLE_MUNICIPO') {
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 animate-fade-in">
+          <div>
+            <label for="nif" class="block text-xs font-bold text-slate-500 uppercase mb-2">
+              {{ currentUser()?.role === 'ROLE_MUNICIPO' ? 'NIPC (NIF Autárquico)' : 'NIF / NIPC Comercial' }}
+            </label>
+            <input id="nif" type="text" formControlName="nif" class="input-field w-full" placeholder="Ex: 500123456" />
+            @if (perfilForm.get('nif')?.invalid && perfilForm.get('nif')?.touched) {
+            <p class="text-[10px] text-amber-600 mt-1">O NIF deve conter exatamente 9 dígitos numéricos.</p>
+            }
+          </div>
+          <div>
+            <label for="telemovel" class="block text-xs font-bold text-slate-500 uppercase mb-2">
+              {{ currentUser()?.role === 'ROLE_MUNICIPO' ? 'Telefone de Contacto Oficial' : 'Contacto Telefónico Móvel' }}
+            </label>
+            <input id="telemovel" type="text" formControlName="telemovel" class="input-field w-full" placeholder="Ex: 244123456" />
+          </div>
+        </div>
+
+        <div class="animate-fade-in">
+          <label for="morada" class="block text-xs font-bold text-slate-500 uppercase mb-2">
+            {{ currentUser()?.role === 'ROLE_MUNICIPO' ? 'Morada dos Paços do Concelho' : 'Sede Social / Morada Fiscal' }}
+          </label>
+          <input id="morada" type="text" formControlName="morada" class="input-field w-full" placeholder="Rua, Praça, Edifício e Código Postal" />
+        </div>
+        }
+
+        <div class="flex justify-end pt-4 border-t border-slate-50">
+          <button type="submit"
+                  [disabled]="perfilForm.invalid || isGuardando()"
+                  class="btn-primary px-6 py-3 font-bold text-xs uppercase tracking-wider shadow-sm disabled:opacity-50">
+            {{ isGuardando() ? 'A Processar...' : 'Atualizar Informações' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    @if (currentUser()?.role === 'ROLE_FEIRANTE') {
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between animate-fade-in">
+      <div>
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-3 mb-4">
+          Pasta Digital de Ficheiros
+        </h3>
+        <p class="text-[11px] text-slate-400 leading-relaxed mb-4">
+          Deixe guardados aqui os seus documentos permanentes. Ao candidatar-se a feiras autárquicas, eles serão associados de forma automática!
+        </p>
+
+        <div class="space-y-3">
+          <div class="p-3 border border-slate-100 rounded-xl flex items-center justify-between text-xs"
+               [ngClass]="temDocAtividade() ? 'bg-emerald-50/20 border-emerald-100' : 'bg-slate-50/60'">
+            <div class="truncate pr-2">
+              <p class="font-bold text-slate-700 truncate">Declaração de Atividade</p>
+              <p class="text-[10px] font-medium" [ngClass]="temDocAtividade() ? 'text-emerald-600' : 'text-slate-400'">
+                {{ temDocAtividade() ? '🟢 Arquivado no Perfil' : '⚪ Pendente de Anexo' }}
+              </p>
+            </div>
+            <label class="bg-white border border-slate-200 hover:border-brand-secondary text-slate-600 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer shadow-sm transition-colors select-none">
+              {{ temDocAtividade() ? 'Substituir' : 'Anexar' }}
+              <input type="file" (change)="uploadDocumentoPortfolio($event, 'INICIO_ACTIVIDADE')" accept="application/pdf" class="hidden" />
+            </label>
+          </div>
+
+          <div class="p-3 border border-slate-100 rounded-xl flex items-center justify-between text-xs"
+               [ngClass]="temDocFinancas() ? 'bg-emerald-50/20 border-emerald-100' : 'bg-slate-50/60'">
+            <div class="truncate pr-2">
+              <p class="font-bold text-slate-700 truncate">Situação Regularizada AT</p>
+              <p class="text-[10px] font-medium" [ngClass]="temDocFinancas() ? 'text-emerald-600' : 'text-slate-400'">
+                {{ temDocFinancas() ? '🟢 Arquivado no Perfil' : '⚪ Pendente de Anexo' }}
+              </p>
+            </div>
+            <label class="bg-white border border-slate-200 hover:border-brand-secondary text-slate-600 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer shadow-sm transition-colors select-none">
+              {{ temDocFinancas() ? 'Substituir' : 'Anexar' }}
+              <input type="file" (change)="uploadDocumentoPortfolio($event, 'NAO_DIVIDA_AT')" accept="application/pdf" class="hidden" />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100/60 p-3 rounded-xl mt-6 leading-normal">
+        🎯 <strong>Dica Gateway:</strong> As chamadas e os ficheiros batem na porta <code>8080</code>, que os encaminha de forma segura para a persistência correta de microsserviços.
+      </div>
+    </div>
+    }
+
+  </div>
+</div>

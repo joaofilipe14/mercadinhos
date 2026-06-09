@@ -1,0 +1,185 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans selection:bg-brand-secondary selection:text-white">
+
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:px-6 sm:py-4 mb-6 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-50 pointer-events-none"></div>
+
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div>
+        <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md mb-1 inline-block">Portal Público</span>
+        <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Encontre a sua próxima feira</h1>
+      </div>
+      <p class="text-xs text-slate-500 max-w-sm md:text-right border-l-2 border-emerald-100 pl-3 md:pl-0 md:border-l-0 md:border-r-2 md:pr-3 py-1">
+        Descubra mercados ativos, consulte as vagas livres e faça a sua candidatura digital num clique.
+      </p>
+    </div>
+  </div>
+
+  <div class="mb-10 relative w-full h-[400px] rounded-3xl border-4 border-white shadow-lg overflow-hidden z-0 group">
+
+    <div id="mapa-vitrine" class="w-full h-full z-0"></div>
+
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:bottom-6 sm:right-6 sm:left-auto w-[90%] sm:w-80 bg-brand-dark/90 backdrop-blur-md rounded-2xl p-5 text-white shadow-2xl border border-slate-600/50"
+         style="z-index: 1000;"
+         (mousedown)="$event.stopPropagation()"
+         (touchstart)="$event.stopPropagation()"> <div class="flex items-center gap-3 mb-4">
+      <div class="bg-white/10 p-2 rounded-full">
+        <span class="text-xl leading-none block">📍</span>
+      </div>
+      <div>
+        <h3 class="text-base font-black leading-tight">Perto de si</h3>
+        <p class="text-[10px] text-slate-300">Encontre feiras num raio de {{ raioKm() }} km.</p>
+      </div>
+    </div>
+
+      <div class="mb-4">
+        <div class="flex justify-between items-end text-[10px] font-bold text-emerald-400 mb-1">
+          <span>5 km</span>
+          <span class="text-base text-white font-black leading-none">{{ raioKm() }} km</span>
+          <span>100 km</span>
+        </div>
+
+        <input type="range" min="5" max="100" step="5" [(ngModel)]="raioKm"
+               (ngModelChange)="raioKm.set($event)"
+               (click)="$event.stopPropagation()"
+               class="w-full h-1.5 bg-slate-700/50 rounded-lg appearance-none cursor-pointer accent-emerald-500 z-50 relative">
+      </div>
+
+      <button (click)="procurarComGPS(); $event.stopPropagation()"
+              [disabled]="isPesquisandoGps()"
+              [class.opacity-50]="isPesquisandoGps()"
+              [class.cursor-not-allowed]="isPesquisandoGps()"
+              class="w-full bg-emerald-500 hover:bg-emerald-400 text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2">
+
+        @if (isPesquisandoGps()) {
+          <span class="animate-spin text-sm inline-block">⏳</span>
+          <span>A varrer o raio...</span>
+        } @else {
+          <span>Procurar Agora</span>
+        }
+
+      </button>
+
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+    <div class="lg:col-span-3 space-y-4">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-lg font-black text-slate-800 uppercase tracking-tight">Oportunidades em Aberto</h2>
+        <span class="text-xs font-bold text-slate-400 bg-white px-3 py-1 rounded-full border border-slate-200">{{ mercados().length }} resultados</span>
+      </div>
+
+      @if (mercados().length === 0) {
+      <div class="bg-white border border-slate-200 rounded-3xl p-10 text-center text-slate-500 shadow-sm">
+        <span class="text-4xl block mb-3">🌪️</span>
+        Não encontrámos feiras neste raio de pesquisa. Tente aumentar a distância!
+      </div>
+      }
+
+      @for (mercado of mercados(); track mercado.id) {
+      <div (click)="abrirDetalhes(mercado)" class="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm hover:shadow-lg hover:border-brand-primary/20 transition-all group flex flex-col sm:flex-row gap-5 items-start sm:items-center relative overflow-hidden">
+
+        <div class="bg-slate-50 h-20 w-20 rounded-2xl flex-shrink-0 flex flex-col items-center justify-center border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
+          <span class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-brand-primary">Vagas</span>
+          <span class="text-2xl font-black text-brand-dark leading-none group-hover:text-brand-primary">{{ mercado.vagas }}</span>
+        </div>
+
+        <div class="flex-1">
+          <h3 class="text-lg font-bold text-slate-800 leading-tight mb-1 group-hover:text-brand-primary transition-colors">{{ mercado.nome }}</h3>
+
+          <p class="text-[11px] text-slate-400 font-semibold flex items-center gap-1 uppercase tracking-wider">
+            <span>📍</span> {{ mercado.localizacao || 'Localização a designar' }}
+          </p>
+
+          @if (mercado.distancia !== undefined && mercado.distancia !== null) {
+          <p class="inline-flex items-center gap-1 text-[10px] font-black text-brand-primary bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md mt-2">
+            <span>🚗</span> A {{ mercado.distancia | number:'1.1-1' }} km de si
+          </p>
+          }
+
+          <div class="flex items-center gap-4 mt-3 pt-3 border-t border-slate-50">
+            <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+              <span class="text-emerald-500">🟢</span> Início: <span class="text-slate-700">{{ mercado.dataInicio | date:'dd MMM yyyy' }}</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+              <span class="text-rose-500">🔴</span> Fim: <span class="text-slate-700">{{ mercado.dataFim | date:'dd MMM yyyy' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="w-full sm:w-auto mt-4 sm:mt-0">
+          @if (isMunicipio()) {
+          <div class="bg-slate-100 text-slate-500 px-4 py-2.5 rounded-xl text-xs font-bold text-center border border-slate-200">
+            Vista Autarquia
+          </div>
+          } @else if (isFeirante()) {
+          @if (mercado.vagas > 0) {
+          @if (inscricoesFeitas().includes(mercado.id)) {
+          <button disabled class="w-full sm:w-auto bg-emerald-50 text-emerald-600 border border-emerald-200 px-5 py-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-not-allowed">
+            <span>✅</span> Inscrito
+          </button>
+          } @else {
+          <button (click)="abrirInscricao(mercado)" class="w-full sm:w-auto bg-brand-primary hover:bg-blue-700 text-white shadow-md shadow-brand-primary/30 px-5 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-transform hover:-translate-y-0.5 active:translate-y-0">
+            Candidatar-me
+          </button>
+          }
+          } @else {
+          <button disabled class="w-full sm:w-auto bg-slate-100 text-slate-400 px-5 py-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200">
+            <span>🔒</span> Esgotado
+          </button>
+          }
+          } @else {
+          <a routerLink="/login" class="block w-full sm:w-auto text-center bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm">
+            Login para Inscrição
+          </a>
+          }
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="lg:col-span-1 space-y-6">
+
+      <div class="bg-slate-50 border border-slate-200 rounded-3xl p-5 shadow-inner">
+        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span>📰</span> Últimas da Rede
+        </h3>
+
+        @for (noticia of noticias(); track noticia.id) {
+        <div class="bg-white p-4 rounded-2xl mb-3 border border-slate-100 shadow-sm hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer group">
+          <span class="text-[9px] font-black text-indigo-500 uppercase tracking-widest">{{ noticia.autoria }}</span>
+          <h4 class="text-xs font-bold text-slate-700 leading-relaxed mt-1.5 group-hover:text-brand-primary transition-colors">{{ noticia.titulo }}</h4>
+        </div>
+        }
+      </div>
+
+      @if (!isFeirante() && !isMunicipio()) {
+      <div class="bg-gradient-to-br from-brand-primary to-indigo-700 rounded-3xl p-6 text-white shadow-lg shadow-indigo-200 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+        <h4 class="font-black text-lg leading-tight mb-2 relative z-10">É Autarquia ou Feirante?</h4>
+        <p class="text-[11px] text-blue-100 mb-5 relative z-10 leading-relaxed">Aceda à sua área profissional para criar feiras, avaliar candidaturas ou gerir a sua pasta de documentos.</p>
+        <a routerLink="/login" class="block text-center bg-white text-brand-dark text-[10px] font-black uppercase tracking-widest py-3 rounded-xl hover:bg-slate-50 transition-colors shadow-md relative z-10">
+          Entrar no Portal
+        </a>
+      </div>
+      }
+    </div>
+
+  </div>
+</div>
+
+@if (isDetalhesAberto()) {
+<app-mercado-detalhes-modal
+  [mercado]="mercadoDetalhes()"
+  (onFechar)="fecharDetalhes()">
+</app-mercado-detalhes-modal>
+}
+
+@if (isModalAberto()) {
+<app-inscricao-modal
+  [mercado]="mercadoSelecionado()"
+  (onFechar)="fecharModal()"
+  (onSucesso)="handleSucessoCandidatura()">
+</app-inscricao-modal>
+}

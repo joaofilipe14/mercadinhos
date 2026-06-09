@@ -1,0 +1,84 @@
+<nav class="bg-white border-b border-slate-100 shadow-sm sticky top-0 z-50 font-sans">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16">
+
+      <div class="flex items-center gap-8">
+        <div routerLink="/mercados-vitrine" class="transform hover:scale-[1.02] transition-transform cursor-pointer">
+          <app-logo></app-logo>
+        </div>
+
+        <div class="hidden md:flex items-center gap-1">
+          @if (isMunicipio()) {
+          <a routerLink="/mercados"
+             routerLinkActive="bg-blue-50 text-brand-primary font-bold border-blue-100"
+             [routerLinkActiveOptions]="{ exact: true }"
+             class="px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-brand-primary hover:bg-blue-50/50 border border-transparent transition-all">
+            🏛️ Gestão de Mercados
+          </a>
+          <a routerLink="/mercados/criar"
+             routerLinkActive="bg-blue-50 text-brand-primary font-bold border-blue-100"
+             class="px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-brand-primary hover:bg-blue-50/50 border border-transparent transition-all">
+            ➕ Criar Feira
+          </a>
+          }
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+
+        @if (isMunicipio()) {
+        <div class="relative flex items-center justify-center p-2 text-slate-500 hover:text-blue-600 rounded-xl hover:bg-slate-50 transition-all cursor-pointer group h-10 w-10 self-center">
+
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 block m-auto">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+          </svg>
+
+          @if (alertasCount() > 0) {
+          <span class="absolute top-1 right-1 bg-rose-500 text-white text-[9px] font-black h-3.5 w-3.5 rounded-full flex items-center justify-center animate-pulse shadow-sm" style="z-index: 10;">
+                {{ alertasCount() }}
+              </span>
+
+          <div class="absolute right-0 top-full mt-2 w-64 bg-white border border-slate-100 rounded-2xl shadow-xl p-4 hidden group-hover:block z-50 text-slate-800 pointer-events-none">
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="text-xs font-bold text-slate-700">Atenção Autarquia ⚠️</span>
+            </div>
+            <p class="text-[11px] text-slate-500 leading-relaxed">
+              Tem <b class="text-slate-800">{{ alertasCount() }} feirantes</b> a aguardar aprovação de documentos nas suas feiras.
+            </p>
+          </div>
+          }
+        </div>
+        }
+
+        @if (isLoggedIn()) {
+        <div class="flex items-center gap-2 border border-indigo-200 hover:bg-indigo-50/30 px-3 py-1.5 rounded-xl cursor-pointer transition-all duration-200 select-none group">
+          <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-xs flex items-center justify-center border border-indigo-100">
+            {{ currentUser()?.email?.charAt(0)?.toUpperCase() }}
+          </div>
+          <div class="hidden sm:block text-left leading-none">
+            <p class="text-xs font-bold text-slate-800 tracking-tight">{{ currentUser()?.email }}</p>
+            <p class="text-[10px] text-slate-400 font-medium mt-0.5">
+              @if (isMunicipio()) { Autarquia }
+              @else if (isFeirante()) { Feirante }
+              @else { Público }
+            </p>
+          </div>
+        </div>
+
+        <button (click)="logout()"
+                class="bg-rose-50 text-rose-700 font-semibold px-4 py-2 rounded-xl hover:bg-rose-100 active:scale-[0.98] transition-all duration-150 border border-rose-100 text-sm flex items-center gap-1.5">
+          <span>🚪</span> <span class="hidden sm:inline">Sair</span>
+        </button>
+
+        } @else {
+        <a routerLink="/login"
+           class="bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-indigo-500 active:scale-[0.98] shadow-sm shadow-indigo-100 transition-all duration-150 text-sm">
+          Entrar no Portal
+        </a>
+        }
+
+      </div>
+
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,95 @@
+<div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+  <div class="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-slate-100 transform scale-100 transition-all max-h-[85vh] flex flex-col font-sans text-slate-800 text-left">
+
+    <div class="h-48 relative p-6 flex flex-col justify-end text-white shrink-0 bg-cover bg-center transition-all"
+         [style.backgroundImage]="mercado?.imagemCartaz ? 'url(' + mercado.imagemCartaz + ')' : 'linear-gradient(to right, var(--brand-primary, #2563eb), #4f46e5)'">
+
+      <div class="absolute inset-0 bg-black/35 z-0"></div>
+
+      <button (click)="onFechar.emit()" class="absolute top-4 right-4 bg-black/40 text-white hover:bg-black/50 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors z-20">✕</button>
+
+      <div class="relative z-10">
+        <span class="text-[9px] font-black uppercase tracking-widest bg-white/20 border border-white/30 px-2 py-0.5 rounded-md">Evento Municipal</span>
+        <h2 class="text-2xl font-black tracking-tight mt-1 drop-shadow-sm">{{ mercado?.nome }}</h2>
+        <p class="text-xs text-slate-200 mt-0.5 flex items-center gap-1 drop-shadow-sm">
+          <span>📅</span> {{ mercado?.dataInicio | date:'dd MMM' }} a {{ mercado?.dataFim | date:'dd MMM yyyy' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="p-6 space-y-5 overflow-y-auto flex-1 min-h-0 text-xs">
+
+      <div class="space-y-1.5">
+        <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-wider">✨ Sobre o Mercado</h4>
+        <p class="text-slate-600 leading-relaxed font-medium text-justify">
+          {{ mercado?.descricao || 'Venha explorar o melhor da nossa região! Este mercado reúne produtores locais, artesãos criativos e uma zona gastronómica dedicada à dinamização cultural. Um espaço aberto e pensado para toda a família apoiar a economia circular e o comércio de proximidade.' }}
+        </p>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-wider">📋 Informações ao Visitante</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-2.5">
+            <span class="text-lg">🎟️</span>
+            <div>
+              <p class="font-bold text-slate-700">Entrada Livre</p>
+              <p class="text-[10px] text-slate-400">Acesso gratuito ao recinto</p>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl border flex items-center gap-2.5 transition-colors"
+               [ngClass]="mercado?.petFriendly ? 'bg-slate-50 border-slate-100' : 'bg-rose-50/20 border-rose-100/40 opacity-70'">
+            <span class="text-lg">{{ mercado?.petFriendly ? '🐾' : '🚫' }}</span>
+            <div>
+              <p class="font-bold" [ngClass]="mercado?.petFriendly ? 'text-slate-700' : 'text-rose-700'">Animais de Estimação</p>
+              <p class="text-[10px] text-slate-400">
+                {{ mercado?.petFriendly ? 'Permitidos com uso de trela' : 'Não é permitida a entrada' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl border flex items-center gap-2.5 transition-colors"
+               [ngClass]="mercado?.temWc ? 'bg-slate-50 border-slate-100' : 'bg-slate-100/40 border-slate-200/40 opacity-50'">
+            <span class="text-lg">{{ mercado?.temWc ? '🚽' : '❌' }}</span>
+            <div>
+              <p class="font-bold text-slate-700">Infraestrutura Sanitária</p>
+              <p class="text-[10px] text-slate-400">
+                {{ mercado?.temWc ? 'Instalações e WC públicos no recinto' : 'Sem WCs públicos no local' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-2.5">
+            <span class="text-lg">🕒</span>
+            <div>
+              <p class="font-bold text-slate-700">Horário Regular</p>
+              <p class="text-[10px] text-slate-400">Consulte os painéis à entrada</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="border border-slate-100 bg-slate-50/60 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-start gap-3 text-left">
+          <span class="text-2xl block mt-0.5">📍</span>
+          <div>
+            <h5 class="font-black text-slate-700">Recinto do Evento</h5>
+            <p class="text-slate-500 mt-0.5 leading-snug">{{ mercado?.localizacao }}</p>
+          </div>
+        </div>
+        <button (click)="abrirRotaNoGoogleMaps()" class="w-full sm:w-auto bg-brand-primary hover:bg-blue-700 text-white text-[11px] font-black uppercase tracking-wider px-4 py-3 rounded-xl shadow-md flex items-center justify-center gap-1.5 shrink-0 transition-all">
+          🚗 Como Chegar
+        </button>
+      </div>
+
+    </div>
+
+    <div class="p-4 bg-slate-50 border-t border-slate-100 shrink-0 flex justify-end">
+      <button (click)="onFechar.emit()" class="w-full sm:w-28 bg-white border border-slate-200 text-slate-700 font-black uppercase tracking-wider py-2.5 rounded-xl hover:bg-slate-50 transition-colors">
+        Fechar
+      </button>
+    </div>
+
+  </div>
+</div>

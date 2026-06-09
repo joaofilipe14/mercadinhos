@@ -7,23 +7,36 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="webapp" />
-        <module name="camaras-service" />
-        <module name="feirantes-service" />
+      </profile>
+      <profile name="Annotation profile for notificacoes-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
+        </processorPath>
+        <module name="identidade-service" />
+        <module name="notificacoes-service" />
+        <module name="municipios-service" />
         <module name="cidadaos-service" />
+        <module name="mercados-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="feirantes-service" target="21" />
       <module name="mercados-parent" target="25" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="camaras-service" options="-parameters" />
       <module name="cidadaos-service" options="-parameters" />
       <module name="feirantes-service" options="-parameters" />
+      <module name="identidade-service" options="-parameters" />
       <module name="mercados-parent" options="-parameters" />
-      <module name="webapp" options="-parameters" />
+      <module name="mercados-service" options="-parameters" />
+      <module name="municipios-service" options="-parameters" />
+      <module name="notificacoes-service" options="-parameters" />
     </option>
   </component>
 </project>

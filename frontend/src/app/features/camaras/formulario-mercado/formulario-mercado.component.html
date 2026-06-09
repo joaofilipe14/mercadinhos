@@ -1,0 +1,201 @@
+<div class="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-3xl shadow-sm border border-slate-100 font-sans">
+
+  <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+    <span class="text-2xl">🎪</span>
+    <div>
+      <h2 class="text-2xl font-black text-slate-800 tracking-tight">
+        {{ isEdicao() ? 'Editar Regulamento Técnico' : 'Criar Novo Mercado Regulamentar' }}
+      </h2>
+      <p class="text-xs text-slate-400 mt-0.5">Configure os dados geográficos, operacionais e a tabela de taxas oficiais do município.</p>
+    </div>
+  </div>
+
+  @if (mensagemSucesso()) {
+  <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl mb-6 font-bold text-sm flex items-center gap-2">
+    <span>✅</span> {{ mensagemSucesso() }}
+  </div>
+  }
+
+  <form [formGroup]="mercadoForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+      <div>
+        <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Nome do Mercado <span class="text-rose-500">*</span></label>
+        <input type="text" formControlName="nome"
+               class="w-full bg-slate-50/70 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-primary focus:bg-white transition-all" placeholder="Ex: Mercado Tradicional de Loures">
+      </div>
+
+      <div class="relative">
+        <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Localização / Morada <span class="text-rose-500">*</span></label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">📍</span>
+          <input type="text" formControlName="localizacao"
+                 placeholder="Ex: Parque Urbano do Infantado"
+                 class="w-full pl-10 bg-slate-50/70 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-primary focus:bg-white transition-all">
+        </div>
+
+        @if (mostrandoSugestoes() && sugestoesMorada().length > 0) {
+        <ul class="absolute z-50 w-full bg-white border border-slate-100 mt-1 rounded-2xl shadow-xl max-h-40 overflow-auto divide-y divide-slate-50">
+          <li *ngFor="let local of sugestoesMorada()" (click)="selecionarMorada(local)" class="px-4 py-2.5 hover:bg-blue-50/50 cursor-pointer text-left transition-colors">
+            <p class="text-xs font-bold text-slate-800">{{ local.properties.name }}</p>
+            <p class="text-[10px] text-slate-400">{{ local.properties.city || local.properties.state }}</p>
+          </li>
+        </ul>
+        }
+      </div>
+
+      <div>
+        <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Data de Início <span class="text-rose-500">*</span></label>
+        <input type="date" formControlName="dataInicio" class="w-full bg-slate-50/70 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-primary">
+      </div>
+
+      <div>
+        <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Data de Fim <span class="text-rose-500">*</span></label>
+        <input type="date" formControlName="dataFim" class="w-full bg-slate-50/70 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-primary">
+      </div>
+
+      <div>
+        <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Vagas Disponíveis <span class="text-rose-500">*</span></label>
+        <input type="number" formControlName="vagas" class="w-full bg-slate-50/70 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-primary">
+      </div>
+
+      <div>
+        <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Estado do Regulamento</label>
+        <select formControlName="estado" class="w-full bg-slate-50/70 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none cursor-pointer">
+          <option value="APROVADO">🟢 Publicado / Ativo</option>
+          <option value="PENDENTE">🟡 Rascunho / Pendente</option>
+        </select>
+      </div>
+    </div>
+
+
+    <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-inner bg-gradient-to-b from-slate-50/30 to-white">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-4">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🪙</span>
+          <div>
+            <h3 class="text-sm font-black text-slate-800">Tabela de Taxas Oficiais</h3>
+            <p class="text-[11px] text-slate-400">Estipule os valores das taxas jurídicas cobradas aos feirantes.</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200/50">
+          <div class="flex items-center gap-1.5 px-2 py-1 bg-white rounded-lg shadow-sm text-[11px] font-bold text-slate-700">
+            <span>📅 Faturação:</span>
+            <select formControlName="tipoPreco" class="bg-transparent focus:outline-none text-brand-primary cursor-pointer">
+              <option value="EVENTO">Taxa Única (Evento)</option>
+              <option value="DIARIO">Taxa Diária (p/ Dia)</option>
+            </select>
+          </div>
+
+          <label class="flex items-center gap-1.5 cursor-pointer select-none text-[11px] font-bold text-slate-700">
+            <input type="checkbox" formControlName="aceitaStreetFood" class="w-3.5 h-3.5 accent-brand-primary rounded">
+            <span>🍔 Permitir Street Food</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-1.5">
+          <label class="block text-[11px] font-black text-slate-500 uppercase tracking-wider">🎨 Stand Próprio {{ obterSufixoPreco() }}</label>
+          <input type="number" formControlName="precoArtesanatoStandProprio"
+                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-brand-primary shadow-sm">
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-1.5"
+             [class.opacity-40]="!mercadoForm.get('disponibilizaStandsOrganizacao')?.value">
+          <div class="flex items-center justify-between">
+            <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider">🎪 Banca da Câmara {{ obterSufixoPreco() }}</label>
+            <input type="checkbox" formControlName="disponibilizaStandsOrganizacao" class="w-3 h-3 accent-brand-primary rounded">
+          </div>
+          <input type="number" formControlName="precoArtesanatoStandOrganizacao"
+                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-brand-primary shadow-sm">
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-1.5"
+             [class.opacity-40]="!mercadoForm.get('aceitaStreetFood')?.value">
+          <label class="block text-[11px] font-black text-slate-500 uppercase tracking-wider">🍔 Roulotte / FoodTruck {{ obterSufixoPreco() }}</label>
+          <input type="number" formControlName="precoStreetFoodStandProprio"
+                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-brand-primary shadow-sm">
+        </div>
+
+      </div>
+    </div>
+
+
+    <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-inner bg-gradient-to-b from-slate-50/40 to-white">
+      <div class="flex items-center gap-2 border-b border-slate-100 pb-4 mb-4">
+        <span class="text-xl">✨</span>
+        <div>
+          <h3 class="text-sm font-black text-slate-800">Ficha Informativa ao Visitante</h3>
+          <p class="text-[11px] text-slate-400">Personalize o visual e os selos de comodidade expostos na montra do cidadão.</p>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Descrição/Apresentação do Evento <span class="text-rose-500">*</span></label>
+          <textarea formControlName="descricao" rows="3"
+                    placeholder="Ex: Venha celebrar as tradições da nossa vila com o melhor artesanato local, farturas quentes e concertos ao vivo..."
+                    class="w-full bg-slate-50/70 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-brand-primary focus:bg-white transition-all resize-none"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Link da Imagem / Cartaz Promocional</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">🖼️</span>
+              <input type="text" formControlName="imagemCartaz"
+                     placeholder="Ex: https://municipio.pt/cartazes/feira_2026.jpg"
+                     class="w-full pl-10 bg-slate-50/70 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-brand-primary focus:bg-white transition-all">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-around bg-slate-50 border border-slate-200/60 p-3 rounded-2xl">
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-700">
+              <input type="checkbox" formControlName="petFriendly" class="w-4 h-4 accent-emerald-500 rounded cursor-pointer">
+              <div class="flex flex-col text-left">
+                <span>🐾 Pet Friendly</span>
+                <span class="text-[9px] text-slate-400 font-normal">Animais são permitidos</span>
+              </div>
+            </label>
+
+            <div class="h-8 w-px bg-slate-200"></div>
+
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-700">
+              <input type="checkbox" formControlName="temWc" class="w-4 h-4 accent-emerald-500 rounded cursor-pointer">
+              <div class="flex flex-col text-left">
+                <span>🚽 Casas de Banho</span>
+                <span class="text-[9px] text-slate-400 font-normal">WCs públicos de apoio</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="border-t border-slate-100 pt-5">
+      <h3 class="text-sm font-black text-slate-800 mb-1">Documentação Jurídica Exigida</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/60">
+        <div *ngFor="let doc of documentosDisponiveis" class="flex items-center gap-2 bg-white px-3 py-2.5 rounded-xl border border-slate-100 shadow-sm">
+          <input type="checkbox" [value]="doc.value" [checked]="isDocumentoSelecionado(doc.value)" (change)="onCheckboxChange($event)" class="w-4 h-4 text-brand-primary bg-slate-100 border-slate-300 rounded cursor-pointer">
+          <label class="text-xs font-bold text-slate-600 cursor-pointer select-none">{{ doc.label }}</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-slate-100 pt-6 flex gap-4">
+      <button type="button" (click)="voltar()" class="w-1/3 bg-slate-100 text-slate-700 font-black py-3 px-4 rounded-xl hover:bg-slate-200 text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+        <span>⬅️</span> Voltar
+      </button>
+
+      <button type="submit" [disabled]="mercadoForm.invalid" class="w-2/3 bg-brand-primary hover:bg-blue-700 text-white font-black py-3 px-4 rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed">
+        <span>{{ isEdicao() ? '💾 Atualizar Regulamento' : '✅ Publicar Novo Mercado' }}</span>
+      </button>
+    </div>
+
+  </form>
+</div>

@@ -1,70 +1,74 @@
 # PoC: Sistema de Gestão de Mercados e Feirantes (Enterprise Edition)
 
-## Arquitetura do Sistema
-- **`frontend`**: Aplicação SPA desenvolvida em Angular (Versão mais recente com Standalone Components & Signals).
-- **`webapp` (API Gateway)**: O ponto de entrada único em Java/Spring que faz o roteamento inteligente para os microsserviços (porta 8080).
-- **`camaras-service`**: Gestão de mercados (Criação, datas, vagas, editais) (porta 8081).
-- **`feirantes-service`**: Gestão de perfis e submissão de candidaturas (upload de PDFs) (porta 8082).
-- **`cidadaos-service`**: Consulta de mercados ativos com filtro geográfico ("perto de mim") (porta 8083).
+## 🏢 Visão Geral da Arquitetura Atualizada
+O sistema evoluiu para uma arquitetura profissional orientada a eventos e baseada em microsserviços isolados por contexto (*Bounded Context*), comunicando assincronamente.
 
-## Stack Tecnológica
-- Java 21
-- Spring Boot 4.0 (Configuração moderna com @ServiceConnection)
-- Spring Cloud (Gateway MVC & Gestão de dependências)
-- Angular (Versão mais recente - Standalone)
-- Base de Dados: PostgreSQL 16 (Isoladas via Docker)
-- Testes (TDD): JUnit 5, AssertJ, Testcontainers, Spring MockMvc
-- ORM: Spring Data JPA / Hibernate
-- Utilitários: Lombok 1.18.34 (Compatível com Java 21+)
-- Orquestração/Deploy: Docker & Kubernetes (K8s)
+* **`frontend`**: Aplicação SPA em **Angular** (Standalone & Signals), reativa e responsiva, exposta via Nginx (porta 4200).
+* **`identidade-service` (Gateway)**: Ponto de entrada e central de segurança (RBAC, JWT). Orquestra as chamadas e o registo na porta `8080`.
+* **`mercados-service`**: Gere as Feiras, Candidaturas, Pasta Digital de PDFs e espelho de Feirantes via Kafka (porta `8082`).
+* **`municipios-service`**: Gere o perfil estendido das Câmaras e Juntas, também mantido via Kafka (porta `8083`).
+* **`pagamentos-service` (NOVO - Mock)**: Simula aprovações financeiras para demonstrar transações distribuídas (porta `8084`).
+* **`broker`**: Apache Kafka para Eventual Consistency e Sagas.
 
 ---
 
-## Fases de Execução TDD (Red -> Green -> Refactor)
+## 🎯 1. O Core do PoC (Requisitos Mínimos para a Demo)
+*O "Caminho Feliz" que prova que a plataforma resolve o problema real de negócio.*
 
-### Fase 1: Esqueleto e Infraestrutura de Base [x]
-- [x] Criar `pom.xml` pai (Multi-module) com dependências do Spring Boot e Spring Cloud.
-- [x] Resolver erros de herança do Maven e caminhos relativos (`<relativePath>`).
-- [x] Solucionar o conflito do compilador Java 21 vs Lombok usando a versão `1.18.34`.
-- [x] Criar os poms e a estrutura de pacotes correta (`pt.devoteam.camaras`) para os 4 módulos Java.
-- [x] Criar o ficheiro `docker-compose.yml` na raiz com 3 instâncias independentes de PostgreSQL.
-- [x] Configurar os ficheiros `application.yml` para ligação autónoma às portas `5432`, `5433` e `5434`.
-- [x] Validar que o projeto compila na totalidade com `BUILD SUCCESS`.
+### ✅ Concluído (A não mexer!)
+- [x] Infraestrutura base (`docker-compose.yml`, bases de dados PostgreSQL isoladas).
+- [x] Gateway de API e Autenticação JWT centralizada.
+- [x] Registo reativo focado em Roles (Frontend com UI Premium).
+- [x] Sincronização de perfis assíncrona (Eventual Consistency) com Kafka (`feirante-registado-topic` e `municipio-registado-topic`).
+- [x] Ecrã de Perfil Inteligente (Pasta Digital para Feirantes, Dados Oficiais para Autarquias).
 
-### Fase 2: TDD - Camada de Dados (Repositories & Entities) [/]
-- [x] **`camaras-service`**:
-    - [x] *Test:* Escrever teste de integração moderno usando a abordagem Spring Boot 4.0 (`@ServiceConnection` + Testcontainers).
-    - [x] *Code:* Criar Entidade `Mercado` e a interface `MercadoRepository`.
-    - [x] *Validar:* Teste executado com sucesso (**DEU VERDE!** 🟢).
-- [ ] **`feirantes-service`**:
-    - [ ] *Test:* Escrever teste de integração com Testcontainers para submeter e persistir uma Candidatura de feirante.
-    - [ ] *Code:* Criar Entidades `Feirante`, `Candidatura` e respetivos Repositórios.
-- [ ] **`cidadaos-service`**:
-    - [ ] *Test:* Escrever teste para a query de pesquisa nativa/geográfica.
-    - [ ] *Code:* Criar modelo de leitura e repositório de consulta rápida.
+### ⏳ A Fazer (Próximos Passos Pós-Férias)
+- [x] **Fluxo de Criação de Feiras (Autarquias):** Formulário onde a Câmara define datas, vagas disponíveis e regras do mercado.
+- [x] **Fluxo de Candidatura (Feirante):** Vitrine pública de feiras com botão "Candidatar-me" que faz auto-fill dos PDFs guardados na Pasta Digital.
+- [x] **Painel de Aprovação (Autarquias):** Backoffice (tabela) para a Câmara ver as candidaturas pendentes, analisar documentos e clicar em "Aprovar" ou "Rejeitar".
+- [ ] **Observabilidade e Distributed Tracing:** Adicionar o Micrometer Tracing (antigo Spring Cloud Sleuth) para gerar *Correlation IDs*. Assim, um pedido que entra no Gateway e viaja pelo Kafka pode ser rastreado nos logs antes de empacotar tudo.
+- [ ] **Dockerização Final:** Garantir que o projeto levanta 100% de forma limpa apenas com um `docker-compose up` para a apresentação no escritório.
 
-### Fase 3: TDD - Lógica de Negócio (Services) [ ]
-- [ ] **`camaras-service`**:
-    - [ ] *Test:* Escrever testes unitários (com Mockito) para as regras de validação de datas e vagas de mercados.
-    - [ ] *Code:* Implementar `MercadoService`.
-- [ ] **`feirantes-service`**:
-    - [ ] *Test:* Escrever testes unitários para a validação do formato e tamanho dos PDFs das candidaturas.
-    - [ ] *Code:* Implementar `CandidaturaService`.
-- [ ] **`cidadaos-service`**:
-    - [ ] *Test:* Testar matematicamente a fórmula de Haversine (Raio de distância em KM).
-    - [ ] *Code:* Implementar `LocalizacaoService`.
+---
 
-### Fase 4: TDD - Exposição de APIs (Controllers) [ ]
-- [ ] Escrever testes de API usando `MockMvc` para todos os endpoints antes de os implementar (Abordagem REST).
-- [ ] Implementar os REST Controllers nos microsserviços.
-- [ ] Garantir o sucesso do endpoint de upload de `MultipartFile` (PDF) no `feirantes-service`.
+## ⭐ 2. O Fator "Uau" (Se houver tempo extra)
+*Funcionalidades de alto impacto para brilhar perante os arquitetos, provando resiliência e pensamento a longo prazo.*
 
-### Fase 5: API Gateway & Frontend (Angular) [ ]
-- [ ] Configurar as rotas no `webapp` (Spring Cloud Gateway) para reencaminhar os pedidos do Frontend para as portas `8081`, `8082` e `8083`.
-- [ ] Gerar o projeto Frontend Angular na pasta `/frontend`.
-- [ ] Desenvolver os ecrãs e serviços em Angular consumindo o Gateway (porta 8080).
+- [ ] **Notificações por E-mail Mockadas (Mailhog via Docker):** Adicionar o serviço Mailhog ao `docker-compose.yml` e configurar o Spring Boot (`spring-boot-starter-mail`) para disparar e-mails transacionais automáticos, simulando o ambiente real:
+    - **E-mail de Registo Inicial:** Disparado pelo `identidade-service` assim que a conta é submetida.
+    - **E-mail de Confirmação e Ativação:** Enviado ao Feirante quando o `mercados-service` confirma o espelhamento do perfil via Kafka.
+    - **E-mail de Aprovação de Candidatura:** Disparado automaticamente pelo `mercados-service` quando a Câmara aprova o comerciante na feira ("*Parabéns, tem lugar na feira!*").
+- [ ] **Transações Distribuídas com Mock Gateway (Sagas):** O `pagamentos-service` finge processar um pagamento e envia um evento Kafka (`pagamento-concluido`). O `mercados-service` ouve isto e muda a candidatura de `A_AGUARDAR_PAGAMENTO` para `LUGAR_CONFIRMADO`.
+- [ ] **Integração de Mapas (Vitrine):** Usar a fórmula de Haversine para listar feiras "Perto de Mim" através de um mapa interativo simples (Leaflet.js).
+- [ ] **Dashboard Visual da Autarquia:** Gráfico (ex: Chart.js) no painel do Município mostrando as "Vagas Ocupadas vs Disponíveis".
+- [ ] **Storage Persistente com MinIO (Mock AWS S3):** Em vez de guardar PDFs no disco efémero do Docker, ligar a Pasta Digital a um bucket do MinIO, provando que o sistema está pronto para a Cloud.
+- [ ] **Resiliência do Gateway (Circuit Breaker):** Adicionar o *Resilience4j* no `identidade-service`. Se o `mercados-service` cair, o Gateway devolve um erro elegante ao invés de ficar bloqueado à espera.
+- [ ] **Resiliência do Kafka (Dead Letter Queue):** Criar um tópico de falhas (`error-topic`) e expor um log de auditoria no Frontend para mostrar que o sistema trata as falhas sem perder informação (Poison Pills).
+- 
+---
 
-### Fase 6: Containerização e Orquestração (Docker / Kubernetes) [ ]
-- [ ] Criar o `Dockerfile` otimizado (Multi-stage build) para os microsserviços e para o app Angular.
-- [ ] Escrever os manifestos Kubernetes (`Deployment`, `Service`, `ConfigMap`, `Secret`) na pasta `/k8s`.
-- [ ] Testar o deploy local num cluster Kubernetes (Minikube / Kind).
+## 🚫 3. Fora de Âmbito (O que NÃO vai ter de todo)
+*Funcionalidades deliberadamente cortadas para manter o foco arquitetural do PoC e não gastar tempo.*
+
+- ❌ **Integrações de Pagamentos Reais:** Não haverá comunicação direta e real com SIBS, MBWay ou Stripe (substituído pelo Mock).
+- ❌ **Chave Móvel Digital / Autenticação.gov:** A burocracia de chaves de testes do Estado consome demasiado tempo. O login por Email/Password nativo é suficiente.
+- ❌ **Comunicação com a Autoridade Tributária (AT):** Geração de faturas e SAFT está fora de questão para um PoC por restrições legais e de tempo.
+- ❌ **Aplicações Mobile Nativas:** Não haverá código iOS ou Android (Swift/Kotlin). O Angular com Tailwind encarrega-se do comportamento responsivo para os ecrãs móveis (PWA).
+- ❌ **Deploy em Cloud Cloud (AWS/Azure):** Configurar Kubernetes clusters e CI/CD pipelines é oneroso. A execução será focada em *containerization* local (Docker).
+
+## 📖 4. Entregáveis de Negócio & Apresentação (Pitch)
+*O embrulho final do PoC para garantir que a mensagem passa tanto para perfis técnicos como para a gestão.*
+
+- [ ] **Documentação Técnica Automática (Swagger/OpenAPI):** Adicionar a dependência `springdoc-openapi-starter-webmvc-ui` ao Gateway e aos microsserviços para gerar a documentação viva das APIs automaticamente.
+- [ ] **Coleção do Postman:** Exportar uma coleção do Postman com os endpoints organizados (Login, Criar Feira, Candidatura) para que os arquitetos possam testar as APIs por si mesmos.
+- [ ] **Diagrama de Arquitetura (C4 Model / Fluxograma):** Um esquema visual (pode ser feito no Draw.io ou Excalidraw) mostrando o Angular a falar com o Gateway, e o Kafka a distribuir mensagens entre as bases de dados isoladas.
+- [ ] **Estimativa de Custos de Infraestrutura (FinOps Alto Nível):** Criar uma secção na documentação (ou um slide dedicado) mapeando os custos estimados para passar esta arquitetura de Docker Local para produção na Cloud (AWS ou Azure):
+    - *Custos de Computação:* Instâncias para alojar os microsserviços Spring Boot e o Frontend Angular.
+    - *Custos de Dados & Mensagens:* Custo estimado de um cluster gerido de Apache Kafka (ex: Confluent Cloud ou AWS MSK) e instâncias de base de dados relacionais (PostgreSQL gerido - AWS RDS).
+    - *Custos de Rede:* Tráfego de dados que passa pelo API Gateway.
+- [ ] **Apresentação (Slide Deck de 5 a 7 slides):**
+    1. **O Problema:** A dor atual das autarquias e feirantes (processos manuais, PDFs repetidos, lentidão).
+    2. **A Solução:** Uma plataforma centralizada, mas distribuída na sua arquitetura.
+    3. **A Arquitetura (O trunfo técnico):** Falar do Kafka, Eventual Consistency, e segurança centralizada (Gateway).
+    4. **Live Demo:** Mostrar o fluxo principal a funcionar (Câmara cria feira -> Feirante candidata-se usando a Pasta Digital).
+    5. **Próximos Passos (Roadmap):** Mostrar os Fatores "Uau" e para onde a plataforma pode crescer.

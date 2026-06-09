@@ -1,6 +1,7 @@
 # Project exclude paths
+/.idea/
 /backend/webapp/target/
 /backend/camaras-service/target/
 /backend/cidadaos-service/target/
 /backend/feirantes-service/target/
-/.idea/
+/frontend/node_modules/

@@ -1,0 +1,91 @@
+<div class="min-h-screen bg-brand-light flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans selection:bg-brand-secondary selection:text-white">
+
+  <div class="sm:mx-auto sm:w-full sm:max-w-md flex flex-col items-center">
+    <div class="mb-6 transform scale-110">
+      <app-logo></app-logo>
+    </div>
+
+    <h2 class="text-center text-3xl font-extrabold text-brand-dark tracking-tight">
+      Área Profissional
+    </h2>
+    <p class="mt-2 text-center text-sm text-slate-500 max-w">
+      Acesso exclusivo para Autarquias, Juntas e Feirantes
+    </p>
+  </div>
+
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="bg-white py-8 px-4 shadow-xl rounded-2xl border border-slate-100 sm:px-10 transform hover:scale-[1.01] transition-all duration-300">
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+        <div>
+          <label for="email" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+            E-mail de Acesso
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">📧</span>
+            <input id="email"
+                   type="email"
+                   formControlName="email"
+                   class="input-field pl-10 w-full"
+                   placeholder="exemplo@dominio.com" />
+          </div>
+        </div>
+
+        <div>
+          <label for="password" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+            Palavra-passe
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">🔒</span>
+            <input id="password"
+                   type="password"
+                   formControlName="password"
+                   class="input-field pl-10 w-full"
+                   placeholder="••••••••" />
+          </div>
+        </div>
+
+        @if (errorMessage()) {
+        <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-2 animate-shake">
+          <span>⚠️</span> {{ errorMessage() }}
+        </div>
+        }
+
+        <div>
+          <button type="submit"
+                  [disabled]="loginForm.invalid || isLoading()"
+                  class="w-full btn-primary py-3 font-bold shadow-md hover:shadow-indigo-200 disabled:opacity-50 disabled:pointer-events-none flex justify-center items-center gap-2">
+
+            @if (isLoading()) {
+            <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>A autenticar ecossistema...</span>
+            } @else {
+            <span>Entrar na Plataforma</span>
+            }
+          </button>
+        </div>
+
+      </form>
+
+      <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col gap-4 text-center">
+
+        <p class="text-xs text-slate-400 leading-relaxed">
+          É um feirante profissional e ainda não tem acesso?
+          <a routerLink="/registo" class="font-bold text-slate-700 hover:text-brand-secondary underline transition-colors inline-block ml-1">
+            Registe-se aqui
+          </a>
+        </p>
+
+        <a routerLink="/mercados-vitrine" class="text-xs font-bold text-brand-secondary hover:text-emerald-700 transition-colors mt-1">
+          ← Voltar à Vitrine Pública (Modo Cidadão)
+        </a>
+
+      </div>
+
+    </div>
+  </div>
+</div>

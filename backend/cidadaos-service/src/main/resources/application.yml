@@ -4,11 +4,13 @@ server:
 spring:
   application:
     name: cidadaos-service
+
+  # Base de dados de interações dos munícipes
   datasource:
-    url: jdbc:postgresql://localhost:5434/cidadaos_db
+    url: jdbc:postgresql://localhost:5435/db_cidadaos
     username: user_cidadaos
-    password: password123
-    driver-class-name: org.postgresql.Driver
+    password: pwd_cidadaos
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,3 +18,14 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Configuração base do Kafka preparada para futuros alertas de feiras
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: cidadaos-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"

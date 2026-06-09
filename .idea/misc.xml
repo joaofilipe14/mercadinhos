@@ -9,6 +9,11 @@
         <option value="$PROJECT_DIR$/backend/feirantes-service/pom.xml" />
         <option value="$PROJECT_DIR$/backend/cidadaos-service/pom.xml" />
         <option value="$PROJECT_DIR$/backend/camaras-service/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/identidade-service/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/mercados-service/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/municipios-service/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/notificacao-service/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/notificacoes-service/pom.xml" />
       </list>
     </option>
   </component>
