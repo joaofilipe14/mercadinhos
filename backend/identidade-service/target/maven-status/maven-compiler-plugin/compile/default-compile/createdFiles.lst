@@ -1,0 +1,11 @@
+pt\devoteam\identidade\controller\AuthController.class
+pt\devoteam\identidade\repository\UtilizadorRepository.class
+pt\devoteam\identidade\config\GatewayCorsConfig.class
+pt\devoteam\identidade\dto\RegistoDTO.class
+pt\devoteam\identidade\entity\Utilizador.class
+pt\devoteam\identidade\IdentidadeApplication.class
+pt\devoteam\identidade\security\JwtGatewayFilter.class
+pt\devoteam\identidade\security\JwtUtil.class
+pt\devoteam\identidade\config\PasswordConfig.class
+pt\devoteam\identidade\config\SecurityConfig.class
+pt\devoteam\identidade\service\UserService.class

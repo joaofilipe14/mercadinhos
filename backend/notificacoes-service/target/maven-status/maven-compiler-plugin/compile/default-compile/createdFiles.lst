@@ -1,0 +1,6 @@
+pt\devoteam\notificacoes\kafka\NotificacaoKafkaListener.class
+pt\devoteam\notificacoes\NotificacaoApplication.class
+pt\devoteam\notificacoes\event\PerfilAtivadoEvent.class
+pt\devoteam\notificacoes\event\CandidaturaAprovadaEvent.class
+pt\devoteam\notificacoes\event\UtilizadorRegistadoEvent.class
+pt\devoteam\notificacoes\service\EmailService.class

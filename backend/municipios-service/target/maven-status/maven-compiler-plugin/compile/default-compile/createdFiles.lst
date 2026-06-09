@@ -1,0 +1,6 @@
+pt\devoteam\notificacoes\service\MunicipioService.class
+pt\devoteam\notificacoes\entity\Municipio.class
+pt\devoteam\notificacoes\controller\MunicipioController.class
+pt\devoteam\notificacoes\kafka\MunicipioKafkaListener.class
+pt\devoteam\notificacoes\MunicipiosApplication.class
+pt\devoteam\notificacoes\repository\MunicipioRepository.class

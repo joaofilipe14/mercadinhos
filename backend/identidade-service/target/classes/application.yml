@@ -1,0 +1,53 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: identidade-service
+  main:
+    web-application-type: reactive
+
+  # Configuração da Base de Dados de Utilizadores (Tabela Única)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/db_identidade
+    username: user_identidade
+    password: pwd_identidade
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Configurações do Apache Kafka (Apenas para disparar eventos de novos utilizadores)
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+      routes:
+        # 🎪 O Motor Central: Mercados, Vagas, Vitrine e Inscrições (PDFs)
+        - id: mercados-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/mercados/**, /api/candidaturas/**
+
+        # 🏛️ Gestão Institucional: Câmaras, Juntas e Organizadores
+        - id: municipios-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/municipios/**
+
+        # 🧑‍🌾 População: Favoritos, Notificações e Avaliações
+        - id: cidadaos-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/cidadaos/**

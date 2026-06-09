@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-brand-light text-brand-dark min-h-screen antialiased;
+  }
+}
+
+/* Classes de Componentes Globais Reutilizáveis */
+@layer components {
+  /* Botão Institucional (Câmaras) */
+  .btn-primary {
+    @apply bg-brand-primary text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-blue-900 active:scale-[0.98] transition-all duration-150 shadow-sm flex items-center justify-center gap-2 text-sm;
+  }
+
+  /* Botão de Ação Comercial (Feirantes) */
+  .btn-secondary {
+    @apply bg-brand-secondary text-white font-bold px-5 py-2.5 rounded-xl hover:bg-emerald-700 active:scale-[0.98] transition-all duration-150 shadow-sm flex items-center justify-center gap-2 text-sm;
+  }
+
+  /* Inputs de Formulários Padrão */
+  .input-field {
+    @apply w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all text-sm shadow-inner;
+  }
+}

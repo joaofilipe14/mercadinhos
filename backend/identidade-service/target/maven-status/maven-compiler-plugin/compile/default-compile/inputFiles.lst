@@ -1,0 +1,11 @@
+C:\mercadinhos\backend\identidade-service\src\main\java\pt\devoteam\identidade\config\GatewayCorsConfig.java
+C:\mercadinhos\backend\identidade-service\src\main\java\pt\devoteam\identidade\config\PasswordConfig.java
+C:\mercadinhos\backend\identidade-service\src\main\java\pt\devoteam\identidade\config\SecurityConfig.java
+C:\mercadinhos\backend\identidade-service\src\main\java\pt\devoteam\identidade\controller\AuthController.java
+C:\mercadinhos\backend\identidade-service\src\main\java\pt\devoteam\identidade\dto\RegistoDTO.java
+C:\mercadinhos\backend\identidade-service\src\main\java\pt\devoteam\identidade\entity\Utilizador.java
+C:\mercadinhos\backend\identidade-service\src\main\java\pt\devoteam\identidade\IdentidadeApplication.java
+C:\mercadinhos\backend\identidade-service\src\main\java\pt\devoteam\identidade\repository\UtilizadorRepository.java
+C:\mercadinhos\backend\identidade-service\src\main\java\pt\devoteam\identidade\security\JwtGatewayFilter.java
+C:\mercadinhos\backend\identidade-service\src\main\java\pt\devoteam\identidade\security\JwtUtil.java
+C:\mercadinhos\backend\identidade-service\src\main\java\pt\devoteam\identidade\service\UserService.java
