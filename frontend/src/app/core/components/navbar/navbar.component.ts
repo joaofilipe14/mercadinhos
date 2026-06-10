@@ -52,4 +52,13 @@ export class NavbarComponent {
       }
     });
   }
+  
+  getProfileRoute(): string {
+    if (this.isMunicipio()) {
+      return '/perfil/municipio';
+    } else if (this.isFeirante()) {
+      return '/perfil/feirante';
+    }
+    return '/perfil';
+  }
 }
