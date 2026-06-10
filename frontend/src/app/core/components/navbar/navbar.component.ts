@@ -28,6 +28,9 @@ export class NavbarComponent {
     if (this.isMunicipio()) {
       this.carregarContadorAlertas();
     }
+    if (this.isFeirante()) {
+      this.carregarContadorAlertas();
+    }
   }
 
   logout() {
@@ -39,6 +42,14 @@ export class NavbarComponent {
   }
 
   carregarContadorAlertas() {
+    this.http.get<any>('http://localhost:8080/api/mercados/municipio/dashboard').subscribe({
+      next: (dados) => {
+        this.alertasCount.set(dados.feirantesAguardandoAprovacao); // Alimenta o badge do Sino!
+      }
+    });
+  }
+
+  carregarContadorFeirantesAlertas() {
     this.http.get<any>('http://localhost:8080/api/mercados/municipio/dashboard').subscribe({
       next: (dados) => {
         this.alertasCount.set(dados.feirantesAguardandoAprovacao); // Alimenta o badge do Sino!

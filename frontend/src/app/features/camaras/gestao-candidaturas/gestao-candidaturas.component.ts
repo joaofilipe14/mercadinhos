@@ -38,13 +38,12 @@ export class GestaoCandidaturasComponent implements OnInit {
   }
 
   alterarEstado(candidaturaId: number, novoEstado: string) {
-    // Exemplo de estados: APROVADA, REJEITADA, PENDENTE
+    // 🎯 Melhor Prática: Agora o fluxo segue a ordem cronológica da Saga (ex: PENDENTE -> A_AGUARDAR_PAGAMENTO)
     this.http.put(`http://localhost:8080/api/candidaturas/${candidaturaId}/estado?estado=${novoEstado}`, {}).subscribe({
       next: () => {
-        // Atualiza a lista automaticamente após sucesso
         this.carregarCandidaturas(this.mercadoId()!);
       },
-      error: () => alert('Erro ao alterar o estado da candidatura.')
+      error: () => alert('Erro ao atualizar o fluxo regulamentar da candidatura.')
     });
   }
 
@@ -61,13 +60,22 @@ export class GestaoCandidaturasComponent implements OnInit {
     return this.expandedRows().has(id);
   }
 
-  // 🎯 O Java devolve um JSON com as chaves (Map), isto extrai as chaves para iterarmos no HTML
   getDocumentosKeys(candidatura: any): string[] {
     if (!candidatura || !candidatura.documentosAnexados) return [];
     return Object.keys(candidatura.documentosAnexados);
   }
 
-  // 🎯 Traduz o Enum "feio" para um nome bonito na UI
+  // 🎯 Traduz o Enum do estado técnico para uma nomenclatura limpa na UI
+  traduzirEstado(estado: string): string {
+    const dicionario: { [key: string]: string } = {
+      'PENDENTE': 'Em Análise',
+      'A_AGUARDAR_PAGAMENTO': 'Aguardando Pagamento',
+      'APROVADA': 'Confirmada / Paga',
+      'REJEITADA': 'Rejeitada'
+    };
+    return dicionario[estado] || estado.replace(/_/g, ' ');
+  }
+
   extrairNomeLegivel(tipoDoc: string): string {
     const dicionario: { [key: string]: string } = {
       'INICIO_ACTIVIDADE': 'Declaração de Início de Atividade',
@@ -80,28 +88,22 @@ export class GestaoCandidaturasComponent implements OnInit {
   }
 
   descarregarDocumento(candidaturaId: number, tipoDoc: string) {
-    // É OBRIGATÓRIO definir o responseType como 'blob' para o Angular não tentar ler o PDF como JSON!
     this.http.get(`http://localhost:8080/api/candidaturas/${candidaturaId}/documentos/${tipoDoc}`, {
       responseType: 'blob'
     }).subscribe({
       next: (blob) => {
-        // Cria um URL virtual na memória do browser com o ficheiro recebido
         const urlVirtual = window.URL.createObjectURL(blob);
-
-        // Cria um link invisível, clica nele automaticamente e destroi-o
         const linkInvisivel = document.createElement('a');
         linkInvisivel.href = urlVirtual;
-        linkInvisivel.download = `${tipoDoc}.pdf`; // Nome com que o ficheiro vai ser guardado
+        linkInvisivel.download = `${tipoDoc}.pdf`;
         document.body.appendChild(linkInvisivel);
         linkInvisivel.click();
-
-        // Limpa a memória
         document.body.removeChild(linkInvisivel);
         window.URL.revokeObjectURL(urlVirtual);
       },
       error: (err) => {
         console.error('Erro ao descarregar:', err);
-        alert('Não foi possível descarregar o documento. Verifique se o ficheiro existe no servidor.');
+        alert('Ficheiro físico indisponível no servidor.');
       }
     });
   }
