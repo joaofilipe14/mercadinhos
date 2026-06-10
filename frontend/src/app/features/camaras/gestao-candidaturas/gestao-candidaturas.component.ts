@@ -38,7 +38,6 @@ export class GestaoCandidaturasComponent implements OnInit {
   }
 
   alterarEstado(candidaturaId: number, novoEstado: string) {
-    // 🎯 Melhor Prática: Agora o fluxo segue a ordem cronológica da Saga (ex: PENDENTE -> A_AGUARDAR_PAGAMENTO)
     this.http.put(`http://localhost:8080/api/candidaturas/${candidaturaId}/estado?estado=${novoEstado}`, {}).subscribe({
       next: () => {
         this.carregarCandidaturas(this.mercadoId()!);
@@ -65,7 +64,6 @@ export class GestaoCandidaturasComponent implements OnInit {
     return Object.keys(candidatura.documentosAnexados);
   }
 
-  // 🎯 Traduz o Enum do estado técnico para uma nomenclatura limpa na UI
   traduzirEstado(estado: string): string {
     const dicionario: { [key: string]: string } = {
       'PENDENTE': 'Em Análise',

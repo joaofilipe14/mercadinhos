@@ -7,13 +7,12 @@ import { Mercado } from '../../../core/models/mercado.model';
 @Component({
   selector: 'app-listar-mercados',
   standalone: true,
-  imports: [CommonModule, RouterLink], // RouterLink é essencial para o botão!
+  imports: [CommonModule, RouterLink],
   templateUrl: './listar-mercados.component.html'
 })
 export class ListarMercadosComponent implements OnInit {
   private http = inject(HttpClient);
 
-  // Estado reativo para os mercados e loading
   mercados = signal<Mercado[]>([]);
   isLoading = signal(true);
   dashboardDados = signal<any>(null);
@@ -26,7 +25,6 @@ export class ListarMercadosComponent implements OnInit {
   }
 
   carregarMercados() {
-    // O Interceptor injeta o JWT automaticamente
     this.http.get<Mercado[]>('http://localhost:8080/api/mercados').subscribe({
       next: (dados) => {
         this.mercados.set(dados);

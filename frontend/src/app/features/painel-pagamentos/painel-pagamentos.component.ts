@@ -17,13 +17,11 @@ export class PainelPagamentosComponent implements OnInit, OnDestroy {
   candidatura = signal<any>(null);
   isLoading = signal<boolean>(true);
   erro = signal<string>('');
-  isPagando = signal<boolean>(false); // Controla o loading do botão de ação
+  isPagando = signal<boolean>(false);
 
-  // Intervalo para verificar o estado reativamente (Polling da Saga)
   private pollInterval: any;
 
   ngOnInit() {
-    // Captura o ?id=X enviado pelo link do e-mail
     this.route.queryParams.subscribe(params => {
       const id = params['id'];
       if (id) {
@@ -49,7 +47,6 @@ export class PainelPagamentosComponent implements OnInit, OnDestroy {
         this.candidatura.set(dados);
         this.isLoading.set(false);
 
-        // Se a Saga já terminou e o estado já for APROVADA, cancelamos o polling imediatamente
         if (dados.estado === 'APROVADA') {
           clearInterval(this.pollInterval);
         }
@@ -62,20 +59,18 @@ export class PainelPagamentosComponent implements OnInit, OnDestroy {
   }
 
   iniciarVerificacaoAutomatica(id: number) {
-    // Verifica o estado da base de dados de 2 em 2 segundos para apanhar o veredito do Kafka automaticamente
     this.pollInterval = setInterval(() => {
       this.http.get<any>(`http://localhost:8080/api/candidaturas/${id}`).subscribe({
         next: (dados) => {
           this.candidatura.set(dados);
           if (dados.estado === 'APROVADA') {
-            clearInterval(this.pollInterval); // Transação concluída com sucesso!
+            clearInterval(this.pollInterval);
           }
         }
       });
     }, 2000);
   }
 
-  // 🎯 NOVO MÉTODO: Envia a intenção de pagamento para o microsserviço financeiro dedicado
   efetuarPagamento() {
     if (!this.candidatura()) return;
     this.isPagando.set(true);
@@ -90,8 +85,6 @@ export class PainelPagamentosComponent implements OnInit, OnDestroy {
       responseType: 'text'
     }).subscribe({
       next: () => {
-        // Desativa o loading do botão. O ecrã muda para verde sozinho
-        // assim que o loop do iniciarVerificacaoAutomatica() ler "APROVADA"
         this.isPagando.set(false);
       },
       error: (err) => {
@@ -101,7 +94,6 @@ export class PainelPagamentosComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Gera uma referência multibanco mockada e bonita com base no ID da candidatura
   gerarReferenciaMb(id: number): string {
     const base = String(id).padStart(3, '0');
     return `305 ${base} 789`;

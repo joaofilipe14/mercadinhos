@@ -2,7 +2,7 @@ import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { AuthService } from '../../services/auth.service'; // Ajusta o caminho para o teu AuthService
+import { AuthService } from '../../services/auth.service';
 import { LogoComponent } from '../logo/logo.component';
 
 @Component({
@@ -16,7 +16,6 @@ export class NavbarComponent {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  // Signals reativos derivados do teu AuthService global
   currentUser = computed(() => this.authService.currentUser());
   isLoggedIn = computed(() => this.currentUser() !== null);
 
@@ -34,17 +33,14 @@ export class NavbarComponent {
   }
 
   logout() {
-    // 1. Chamar o método de logout no teu serviço (deve limpar o localStorage e o Signal)
     this.authService.logout();
-
-    // 2. Redirecionar imediatamente para a vitrine pública
     this.router.navigate(['/mercados-vitrine']);
   }
 
   carregarContadorAlertas() {
     this.http.get<any>('http://localhost:8080/api/mercados/municipio/dashboard').subscribe({
       next: (dados) => {
-        this.alertasCount.set(dados.feirantesAguardandoAprovacao); // Alimenta o badge do Sino!
+        this.alertasCount.set(dados.feirantesAguardandoAprovacao);
       }
     });
   }
@@ -52,7 +48,7 @@ export class NavbarComponent {
   carregarContadorFeirantesAlertas() {
     this.http.get<any>('http://localhost:8080/api/mercados/municipio/dashboard').subscribe({
       next: (dados) => {
-        this.alertasCount.set(dados.feirantesAguardandoAprovacao); // Alimenta o badge do Sino!
+        this.alertasCount.set(dados.feirantesAguardandoAprovacao);
       }
     });
   }

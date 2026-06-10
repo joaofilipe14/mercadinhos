@@ -31,7 +31,6 @@ export class FormularioMercadoComponent implements OnInit {
     { value: 'REGISTO_CRIMINAL', label: 'Registo Criminal' }
   ];
 
-  // 🎯 FormBuilder reativo com os valores padrão corretos
   mercadoForm = this.fb.nonNullable.group({
     nome: ['', Validators.required],
     localizacao: ['', Validators.required],
@@ -43,12 +42,10 @@ export class FormularioMercadoComponent implements OnInit {
     latitude: [38.7223, Validators.required],
     longitude: [-9.1449, Validators.required],
 
-    // Configurações e Toggles Regulamentares
-    tipoPreco: ['EVENTO', Validators.required], // 'EVENTO' ou 'DIARIO'
+    tipoPreco: ['EVENTO', Validators.required],
     aceitaStreetFood: [true],
     disponibilizaStandsOrganizacao: [true],
 
-    // Preçários do Caso Real
     precoArtesanatoStandProprio: [35, [Validators.required, Validators.min(0)]],
     precoArtesanatoStandOrganizacao: [100, [Validators.required, Validators.min(0)]],
     precoStreetFoodStandProprio: [180, [Validators.required, Validators.min(0)]],
@@ -66,7 +63,6 @@ export class FormularioMercadoComponent implements OnInit {
       this.carregarDadosMercado(Number(idParam));
     }
 
-    // 🎛️ Ouvinte dinâmico para ativar/desativar Stands da Organização
     this.mercadoForm.get('disponibilizaStandsOrganizacao')?.valueChanges.subscribe(disponibiliza => {
       const controloStandOrg = this.mercadoForm.get('precoArtesanatoStandOrganizacao');
       if (disponibiliza) {
@@ -77,7 +73,6 @@ export class FormularioMercadoComponent implements OnInit {
       }
     });
 
-    // 🎛️ Ouvinte dinâmico para ativar/desativar categoria de Street Food
     this.mercadoForm.get('aceitaStreetFood')?.valueChanges.subscribe(aceita => {
       const controloStreetFood = this.mercadoForm.get('precoStreetFoodStandProprio');
       if (aceita) {
@@ -88,7 +83,6 @@ export class FormularioMercadoComponent implements OnInit {
       }
     });
 
-    // Autocomplete geográfico Photon
     this.mercadoForm.get('localizacao')?.valueChanges.pipe(
       filter(() => !this.programmaticChange),
       debounceTime(500),
@@ -110,7 +104,6 @@ export class FormularioMercadoComponent implements OnInit {
     });
   }
 
-  // 🎯 Método essencial exigido pelo HTML para atualizar as labels de preço na hora
   obterSufixoPreco(): string {
     const tipo = this.mercadoForm.get('tipoPreco')?.value;
     return tipo === 'DIARIO' ? '(p/ Dia)' : '(Evento Completo)';
@@ -164,7 +157,6 @@ export class FormularioMercadoComponent implements OnInit {
   onSubmit() {
     if (this.mercadoForm.invalid) return;
 
-    // getRawValue garante o envio de campos que estejam desativados (disabled) no ecrã
     const payload = this.mercadoForm.getRawValue();
 
     if (this.isEdicao()) {

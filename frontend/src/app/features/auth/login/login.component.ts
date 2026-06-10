@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms'; // 🎯 Importado o RouterModule
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { LogoComponent } from '../../../core/components/logo/logo.component';
@@ -39,21 +39,17 @@ export class LoginComponent {
 
     this.authService.login(email, password).subscribe({
       next: (res) => {
-        // Redirecionamento inteligente baseado nas permissões do utilizador
         if (res.role === 'ROLE_MUNICIPO') {
-          // 🏛️ Funcionários das Câmaras vão para o painel de criação/gestão de mercados
           this.router.navigate(['/mercados']);
         } else if (res.role === 'ROLE_FEIRANTE') {
-          // 🧑‍🌾 Feirantes vão para a vitrine unificada
           this.router.navigate(['/mercados-vitrine']);
         } else {
-          // Fallback seguro caso exista outro perfil no futuro
           this.router.navigate(['/mercados-vitrine']);
         }
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.errorMessage.set('Credenciais inválidas. Tente novamente.');
+        this.errorMessage.set('Credenciais inválidas. Tenta outra vez.');
       },
       complete: () => this.isLoading.set(false)
     });
