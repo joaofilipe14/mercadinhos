@@ -6,7 +6,9 @@ spring:
     name: identidade-service
   main:
     web-application-type: reactive
-
+  sql:
+    init:
+      mode: always
   # Configuração da Base de Dados de Utilizadores (Tabela Única)
   datasource:
     url: jdbc:postgresql://localhost:5432/db_identidade
@@ -17,6 +19,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    defer-datasource-initialization: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -38,7 +41,7 @@ spring:
         - id: mercados-service
           uri: http://localhost:8082
           predicates:
-            - Path=/api/mercados/**, /api/candidaturas/**
+            - Path=/api/mercados/**, /api/candidaturas/**, /api/feirantes/**
 
         # 🏛️ Gestão Institucional: Câmaras, Juntas e Organizadores
         - id: municipios-service
@@ -51,3 +54,17 @@ spring:
           uri: http://localhost:8083
           predicates:
             - Path=/api/cidadaos/**
+
+        - id: pagamentos-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/pagamentos/**
+
+        - id: minio-mercados-cdn
+          uri: http://localhost:9000
+          predicates:
+            - Path=/mercados-bucket/**
+        - id: minio-perfis-cdn
+          uri: http://localhost:9000
+          predicates:
+            - Path=/utilizadores-bucket/**

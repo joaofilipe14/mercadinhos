@@ -1,0 +1,35 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: pagamentos-service
+
+  # 🗄️ Configuração da Base de Dados PostgreSQL
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5436/db_pagamentos}
+    username: ${SPRING_DATASOURCE_USERNAME:user_pagamentos}
+    password: ${SPRING_DATASOURCE_PASSWORD:pwd_pagamentos}
+    driver-class-name: org.postgresql.Driver
+
+  # 🧬 Configurações do Hibernate / JPA
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update # Cria automaticamente a tabela 'transacoes' com base na tua Entidade Java
+    show-sql: true     # Imprime os comandos SQL nos logs do Docker para conseguires debugar
+    properties:
+      hibernate:
+        format_sql: true
+
+  # 🦅 Barramento de Eventos (Kafka)
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: pagamentos-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer

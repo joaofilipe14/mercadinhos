@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import pt.devoteam.mercados.entity.enums.EstadoCandidatura;
 import pt.devoteam.mercados.entity.enums.TipoDocumento;
+import pt.devoteam.mercados.entity.enums.TipoInfraestrutura;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -48,7 +49,14 @@ public class Candidatura {
     private EstadoCandidatura estado = EstadoCandidatura.PENDENTE;
 
     private LocalDateTime dataSubmissao;
+    @Column(name = "dias")
+    private Integer dias;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "opcao_infraestrutura", nullable = false)
+    private TipoInfraestrutura opcaoInfraestrutura = TipoInfraestrutura.PROPRIO;
 
+    @Column(name = "preco_total")
+    private Double precoTotal;
     @PrePersist
     protected void onCreate() {
         this.dataSubmissao = LocalDateTime.now();

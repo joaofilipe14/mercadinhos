@@ -40,5 +40,9 @@ export const routes: Routes = [
   {
     path: 'mercados/:id/candidaturas',
     loadComponent: () => import('./features/camaras/gestao-candidaturas/gestao-candidaturas.component').then(m => m.GestaoCandidaturasComponent)
+  },
+  {
+    path: 'painel/pagamentos',
+    loadComponent: () => import('./features/painel-pagamentos/painel-pagamentos.component').then(m => m.PainelPagamentosComponent)
   }
 ];

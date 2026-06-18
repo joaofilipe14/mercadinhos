@@ -30,6 +30,7 @@
         <module>mercados-service</module>
         <module>cidadaos-service</module>
         <module>notificacoes-service</module>
+        <module>pagamentos-service</module>
     </modules>
 
     <build>

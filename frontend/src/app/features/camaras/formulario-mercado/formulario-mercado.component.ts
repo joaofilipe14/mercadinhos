@@ -1,10 +1,11 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, switchMap, filter } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-formulario-mercado',
@@ -17,6 +18,7 @@ export class FormularioMercadoComponent implements OnInit {
   private http = inject(HttpClient);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private toastService = inject(ToastService);
   private programmaticChange = false;
 
   isEdicao = signal<boolean>(false);
@@ -24,6 +26,14 @@ export class FormularioMercadoComponent implements OnInit {
   mensagemSucesso = signal<string | null>(null);
   sugestoesMorada = signal<any[]>([]);
   mostrandoSugestoes = signal<boolean>(false);
+
+  // 🎯 METODO DE IMPORTAÇÃO: Define se o utilizador prefere colar um LINK URL ou carregar um FICHEIRO
+  metodoCartaz = signal<'URL' | 'UPLOAD'>('URL');
+  isHoveringCartaz = signal<boolean>(false);
+  isUploadingCartaz = signal<boolean>(false);
+  imagemPreviewUrl = signal<string | null>(null);
+
+  @ViewChild('fileCartaz') fileCartazInput!: ElementRef<HTMLInputElement>;
 
   documentosDisponiveis = [
     { value: 'INICIO_ACTIVIDADE', label: 'Declaração de Início de Atividade' },
@@ -62,6 +72,16 @@ export class FormularioMercadoComponent implements OnInit {
       this.mercadoId.set(Number(idParam));
       this.carregarDadosMercado(Number(idParam));
     }
+
+    // 🎯 MONITOR DE URL EM TEMPO REAL: Atualiza a foto de preview assim que o utilizador digita/cola um link
+    this.mercadoForm.get('imagemCartaz')?.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(valorUrl => {
+      if (this.metodoCartaz() === 'URL') {
+        this.imagemPreviewUrl.set(valorUrl && valorUrl.trim() !== '' ? valorUrl : null);
+      }
+    });
 
     this.mercadoForm.get('disponibilizaStandsOrganizacao')?.valueChanges.subscribe(disponibiliza => {
       const controloStandOrg = this.mercadoForm.get('precoArtesanatoStandOrganizacao');
@@ -129,9 +149,78 @@ export class FormularioMercadoComponent implements OnInit {
         this.programmaticChange = true;
         this.mercadoForm.patchValue(mercado);
         this.programmaticChange = false;
+
+        if (mercado.imagemCartaz) {
+          this.imagemPreviewUrl.set(mercado.imagemCartaz);
+          // Se carregar um Base64, muda a aba para UPLOAD, se for um link HTTP mantém em URL
+          if (mercado.imagemCartaz.startsWith('data:image')) {
+            this.metodoCartaz.set('UPLOAD');
+          }
+        }
       },
-      error: (err) => console.error('Erro ao carregar mercado', err)
+      error: (err) => {
+        console.error('Erro ao carregar mercado', err);
+        this.toastService.show('Não foi possível resgatar o regulamento técnico.', 'error', 'Falha de Inventário');
+      }
     });
+  }
+
+  onDragOverCartaz(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isHoveringCartaz.set(true);
+  }
+
+  onDragLeaveCartaz(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isHoveringCartaz.set(false);
+  }
+
+  onDropCartaz(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isHoveringCartaz.set(false);
+
+    const ficheiros = event.dataTransfer?.files;
+    if (ficheiros && ficheiros.length > 0) {
+      this.processarImagemCartaz(ficheiros[0]);
+    }
+  }
+
+  onFicheiroSelecionado(event: any) {
+    const ficheiro = event.target.files[0];
+    if (ficheiro) {
+      this.processarImagemCartaz(ficheiro);
+    }
+  }
+
+  private processarImagemCartaz(file: File) {
+    if (!file.type.startsWith('image/')) {
+      this.toastService.show('Apenas são permitidos ficheiros de imagem (PNG, JPG, WEBP).', 'error', 'Formato Inválido');
+      return;
+    }
+
+    this.isUploadingCartaz.set(true);
+
+    const leitor = new FileReader();
+    leitor.onload = (e: any) => {
+      const base64Resultado = e.target.result;
+      this.imagemPreviewUrl.set(base64Resultado);
+      this.mercadoForm.patchValue({ imagemCartaz: base64Resultado });
+      this.isUploadingCartaz.set(false);
+      this.toastService.show('Cartaz promocional importado com sucesso para o regulamento.', 'success', 'Ficheiro Pronto');
+    };
+    leitor.readAsDataURL(file);
+  }
+
+  removerCartaz() {
+    this.imagemPreviewUrl.set(null);
+    this.mercadoForm.patchValue({ imagemCartaz: '' });
+    if (this.fileCartazInput) {
+      this.fileCartazInput.nativeElement.value = '';
+    }
+    this.toastService.show('Cartaz Promocional removido.', 'info', 'Ficheiro Limpo');
   }
 
   onCheckboxChange(event: any) {
@@ -162,23 +251,30 @@ export class FormularioMercadoComponent implements OnInit {
     if (this.isEdicao()) {
       this.http.put(`http://localhost:8080/api/mercados/${this.mercadoId()}`, payload).subscribe({
         next: () => {
-          this.mensagemSucesso.set('Regulamento técnico e taxas atualizados com sucesso!');
+          this.toastService.show('Regulamento técnico e taxas atualizados com sucesso!', 'success', 'Edição Concluída');
           setTimeout(() => this.voltar(), 1500);
         },
-        error: (err) => alert('Erro ao atualizar dados no servidor.')
+        error: (err) => {
+          console.error(err);
+          this.toastService.show('Erro ao atualizar dados do mercado no servidor.', 'error', 'Falha na Operação');
+        }
       });
     } else {
       this.http.post('http://localhost:8080/api/mercados', payload).subscribe({
         next: () => {
-          this.mensagemSucesso.set('Novo mercado e taxas regulamentares publicados com sucesso!');
+          this.toastService.show('Novo mercado e taxas regulamentares publicados com sucesso!', 'success', 'Publicação OK');
           this.mercadoForm.reset({
             vagas: 50, estado: 'APROVADO', latitude: 38.7223, longitude: -9.1449,
             tipoPreco: 'EVENTO', aceitaStreetFood: true, disponibilizaStandsOrganizacao: true,
             precoArtesanatoStandProprio: 35, precoArtesanatoStandOrganizacao: 100, precoStreetFoodStandProprio: 180
           });
-          setTimeout(() => this.mensagemSucesso.set(null), 3000);
+          this.imagemPreviewUrl.set(null);
+          setTimeout(() => this.voltar(), 1500);
         },
-        error: (err) => alert('Erro ao criar mercado no servidor.')
+        error: (err) => {
+          console.error(err);
+          this.toastService.show('Erro ao criar novo mercado no servidor autárquico.', 'error', 'Falha na Publicação');
+        }
       });
     }
   }

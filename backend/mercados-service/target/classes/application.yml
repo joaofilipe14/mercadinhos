@@ -8,7 +8,9 @@ spring:
     multipart:
       max-file-size: 15MB
       max-request-size: 50MB
-
+  sql:
+    init:
+      mode: always
   # Base de dados unificada de feiras e candidaturas
   datasource:
     url: jdbc:postgresql://localhost:5434/db_mercados
@@ -19,6 +21,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    defer-datasource-initialization: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -33,3 +36,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       properties:
         spring.json.trusted.packages: "*"
+  data:
+    web:
+      pageable:
+        page-serialization-mode: via-dto

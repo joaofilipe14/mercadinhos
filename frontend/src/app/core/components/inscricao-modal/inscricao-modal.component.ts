@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { Candidatura } from '../../models/candidatura.model';
 
 @Component({
   selector: 'app-inscricao-modal',
@@ -21,7 +22,9 @@ export class InscricaoModalComponent implements OnInit {
   // Configurações reativas escolhidas pelo Feirante
   atividadeSelecionada = signal<string>('ARTESANATO'); // 'ARTESANATO' ou 'STREET_FOOD'
   infraestruturaSelecionada = signal<string>('PROPRIO'); // 'PROPRIO' ou 'ORGANIZACAO'
-  diasSelecionados = signal<number>(1);
+  dias = signal<number>(1);
+  precoTotal = signal<number>(1);
+  estado = signal<string>('PENDENTE'); // 'PENDENTE', 'APROVADA', 'REJEITADA'
 
   // Mapeamento dos ficheiros carregados
   dossieFicheiros = signal<{ [tipoDoc: string]: File }>({});
@@ -32,8 +35,8 @@ export class InscricaoModalComponent implements OnInit {
 
   ngOnInit() {
     // Garante que os dias começam a 1 caso falte informação do backend
-    if (!this.diasSelecionados() || this.diasSelecionados() < 1) {
-      this.diasSelecionados.set(1);
+    if (!this.dias() || this.dias() < 1) {
+      this.dias.set(1);
     }
   }
 
@@ -47,9 +50,9 @@ export class InscricaoModalComponent implements OnInit {
 
   // Incrementa ou decrementa dias respeitando os limites da feira
   alterarDias(valor: number) {
-    const total = this.diasSelecionados() + valor;
+    const total = this.dias() + valor;
     if (total >= 1 && total <= 30) { // Bloqueio de segurança UX
-      this.diasSelecionados.set(total);
+      this.dias.set(total);
     }
   }
 
@@ -69,7 +72,7 @@ export class InscricaoModalComponent implements OnInit {
 
     // Multiplica pelos dias contratados apenas se for faturação DIÁRIA
     if (this.mercado.tipoPreco === 'DIARIO') {
-      return precoUnitario * this.diasSelecionados();
+      return precoUnitario * this.dias();
     }
 
     return precoUnitario;
@@ -97,13 +100,19 @@ export class InscricaoModalComponent implements OnInit {
 
     this.isSubmetendo.set(true);
     this.mensagemErro.set('');
-
+      const payloadCandidatura: Candidatura = {
+      mercadoId: this.mercado.id,
+      feiranteEmail: this.authService.currentUser()?.email || 'anonimo@feirante.pt',
+      opcaoInfraestrutura: this.infraestruturaSelecionada(),
+      dias: this.dias(),
+      estado: this.estado(),
+      precoTotal: this.contaFinal()
+    };
     const formData = new FormData();
     formData.append('mercadoId', this.mercado.id.toString());
     formData.append('feiranteEmail', this.authService.currentUser()?.email || 'anonimo@feirante.pt');
-    formData.append('tipoAtividade', this.atividadeSelecionada());
-    formData.append('opcaoInfrainfrastructure', this.infraestruturaSelecionada());
-    formData.append('diasContratados', this.diasSelecionados().toString());
+    formData.append('opcaoInfraestrutura', this.infraestruturaSelecionada());
+    formData.append('dias', this.dias().toString());
     formData.append('valorTotalPago', this.contaFinal().toString());
 
     const ficheiros = this.dossieFicheiros();

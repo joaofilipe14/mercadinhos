@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import pt.devoteam.mercados.entity.enums.EstadoMercado;
 import pt.devoteam.mercados.entity.enums.TipoDocumento;
 import jakarta.persistence.Transient;
+import pt.devoteam.mercados.entity.enums.TipoPreco;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,10 +53,9 @@ public class Mercado {
 
     @Column(nullable = false)
     private String criadoPor;
-
-    // 🎯 NOVOS CAMPOS DO REGULAMENTO DE TAXAS REAIS
     @Column(name = "tipo_preco")
-    private String tipoPreco; // "EVENTO" ou "DIARIO"
+    @Enumerated(EnumType.STRING)
+    private TipoPreco tipoPreco;
     @Column(name = "aceita_street_food")
     private Boolean aceitaStreetFood;
     @Column(name = "disponibiliza_stands_organizacao")
@@ -70,10 +71,12 @@ public class Mercado {
     private String descricao;
     @Column(name = "pet_friendly")
     private boolean petFriendly = true;
-    @Column(name = "tem_wc")
-    private boolean temWc = true;
     @Column(name = "imagem_cartaz")
     private String imagemCartaz;
     @Transient
     private Double distancia;
+    @Column(name = "tem_wc")
+    private boolean temWc = true;
+    @Column(name = "aceita_candidaturas")
+    private boolean aceitaCandidaturas = false;
 }

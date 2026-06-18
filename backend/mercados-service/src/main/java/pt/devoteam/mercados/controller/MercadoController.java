@@ -1,5 +1,9 @@
 package pt.devoteam.mercados.controller;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pt.devoteam.mercados.entity.Mercado;
@@ -13,28 +17,31 @@ public class MercadoController {
 
     private final MercadoService mercadoService;
 
-    // Injeção limpa e recomendada via construtor
     public MercadoController(MercadoService mercadoService) {
         this.mercadoService = mercadoService;
     }
 
     @GetMapping
-    public ResponseEntity<List<Mercado>> listarMercados(
+    public ResponseEntity<Page<Mercado>> listarMercados(
             @RequestHeader(value = "X-User-Role", required = false) String role,
-            @RequestHeader(value = "X-User-Email", required = false) String email) {
-        // 🛡️ Filtro Inteligente: Se for Autarquia vê tudo, senão só vê as feiras Aprovadas
-        if (role != null && (role.equals("ROLE_MUNICIPO") || role.equals("ROLE_JUNTA"))) {
-            return ResponseEntity.ok(mercadoService.listarCriadosPor(email));
-        }
-        return ResponseEntity.ok(mercadoService.listarMercadosAprovados());
+            @RequestHeader(value = "X-User-Email", required = false) String email,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        Pageable paginacao = PageRequest.of(page, size);
+        List<Mercado> mercadosAprovados = mercadoService.listarMercadosAprovados();
+        return ResponseEntity.ok(converteParaPage(mercadosAprovados, paginacao));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Mercado> obterMercado(@PathVariable Long id) {
-        // O Controller delega a pesquisa para o Service e lida com o HTTP 404 Not Found se não existir
         return mercadoService.obterMercado(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/criados-por/{email}")
+    public ResponseEntity<List<Mercado>> obterMercadoPor(@PathVariable String email) {
+        return ResponseEntity.ok(mercadoService.listarCriadosPor(email));
     }
 
     @PostMapping
@@ -42,7 +49,6 @@ public class MercadoController {
             @RequestBody Mercado mercado,
             @RequestHeader(value = "X-User-Role", defaultValue = "ROLE_USER") String role,
             @RequestHeader(value = "X-User-Email", defaultValue = "anonym") String email) {
-        // 🛡️ Filtro de Segurança Rest
         if (!role.equals("ROLE_MUNICIPO") && !role.equals("ROLE_JUNTA") && !role.equals("ROLE_ORGANIZADOR")) {
             return ResponseEntity.status(403).body("Apenas autarquias ou organizadores autorizados podem criar feiras.");
         }
@@ -55,7 +61,6 @@ public class MercadoController {
             @PathVariable Long id,
             @RequestBody Mercado mercadoAtualizado,
             @RequestHeader(value = "X-User-Role", defaultValue = "ROLE_USER") String role) {
-        // 🛡️ Bloqueia feirantes ou anónimos de tentarem injetar edições nas feiras via Postman/Terminal
         if (!role.equals("ROLE_MUNICIPO") && !role.equals("ROLE_JUNTA")) {
             return ResponseEntity.status(403).body("Sem permissões para editar feiras.");
         }
@@ -74,12 +79,28 @@ public class MercadoController {
     }
 
     @GetMapping("/proximos")
-    public ResponseEntity<List<Mercado>> listarMercadosProximos(
+    public ResponseEntity<Page<Mercado>> listarMercadosProximos(
             @RequestParam double lat,
             @RequestParam double lng,
-            @RequestParam(defaultValue = "50") double raio) {
+            @RequestParam(defaultValue = "50") double raio,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
 
-        List<Mercado> mercados = mercadoService.listarMercadosProximos(lat, lng, raio);
+        Pageable paginacao = PageRequest.of(page, size);
+        Page<Mercado> mercados = mercadoService.listarMercadosProximos(lat, lng, raio, paginacao);
         return ResponseEntity.ok(mercados);
+    }
+
+    /**
+     * 🧮 Utilitário: Transforma sublistas em objetos estruturados Page do Spring Data
+     */
+    private <T> Page<T> converteParaPage(List<T> lista, Pageable pageable) {
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), lista.size());
+
+        if (start > lista.size()) {
+            return new PageImpl<>(List.of(), pageable, lista.size());
+        }
+        return new PageImpl<>(lista.subList(start, end), pageable, lista.size());
     }
 }

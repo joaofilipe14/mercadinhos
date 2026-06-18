@@ -7,13 +7,28 @@ volumes:
   pgdata_municipios:
   pgdata_mercados:
   pgdata_cidadaos:
+  pgdata_pagamentos:
+  minio_data: # 🎯 CORRIGIDO: O volume do MinIO foi centralizado aqui no topo global
 
 services:
   # ==========================================
   # 1. CAMADA DE BASES DE DADOS (POSTGRES)
   # ==========================================
 
-  # Nova Base de Dados para logins e perfis (Tabela Única)
+  postgres-pagamentos:
+    image: postgres:16-alpine
+    container_name: postgres-pagamentos
+    environment:
+      POSTGRES_DB: db_pagamentos
+      POSTGRES_USER: user_pagamentos
+      POSTGRES_PASSWORD: pwd_pagamentos
+    ports:
+      - "5436:5432"
+    networks:
+      - mercadinhos-net
+    volumes:
+      - pgdata_pagamentos:/var/lib/postgresql/data
+
   postgres-identidade:
     image: postgres:16-alpine
     container_name: postgres-identidade
@@ -28,7 +43,6 @@ services:
     volumes:
       - pgdata_identidade:/var/lib/postgresql/data
 
-  # Base de Dados institucional
   postgres-municipios:
     image: postgres:16-alpine
     container_name: postgres-municipios
@@ -43,7 +57,6 @@ services:
     volumes:
       - pgdata_municipios:/var/lib/postgresql/data
 
-  # O novo coração do sistema (Vagas, Feiras e PDFs)
   postgres-mercados:
     image: postgres:16-alpine
     container_name: postgres-mercados
@@ -58,7 +71,6 @@ services:
     volumes:
       - pgdata_mercados:/var/lib/postgresql/data
 
-  # Base de Dados para o Cidadão (Favoritos e Avaliações)
   postgres-cidadaos:
     image: postgres:16-alpine
     container_name: postgres-cidadaos
@@ -73,12 +85,13 @@ services:
     volumes:
       - pgdata_cidadaos:/var/lib/postgresql/data
 
-  # Mensageria / Eventos (Mantém-se igual)
   kafka:
     image: confluentinc/cp-kafka:7.6.0
     container_name: markets-kafka
     ports:
       - "9092:9092"
+    networks:
+      - mercadinhos-net
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
@@ -99,8 +112,8 @@ services:
     image: mailhog/mailhog:latest
     container_name: mailhog
     ports:
-      - "1025:1025" # Porta SMTP (Onde o Spring liga para enviar)
-      - "8025:8025" # Porta HTTP (Onde tu entras para ler no browser)
+      - "1025:1025"
+      - "8025:8025"
     networks:
       - mercadinhos-net
 
@@ -114,6 +127,7 @@ services:
       args:
         - SERVICE_NAME=municipios-service
     container_name: municipios-service
+    profiles: ["apps"]
     ports:
       - "8081:8081"
     environment:
@@ -132,6 +146,7 @@ services:
       args:
         - SERVICE_NAME=mercados-service
     container_name: mercados-service
+    profiles: ["apps"]
     ports:
       - "8082:8082"
     environment:
@@ -150,6 +165,7 @@ services:
       args:
         - SERVICE_NAME=cidadaos-service
     container_name: cidadaos-service
+    profiles: ["apps"]
     ports:
       - "8083:8083"
     environment:
@@ -171,8 +187,9 @@ services:
       args:
         - SERVICE_NAME=identidade-service
     container_name: identidade-service
+    profiles: ["apps"]
     ports:
-      - "8080:8080" # Porta principal que o Angular vai consumir
+      - "8080:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-identidade:5432/db_identidade
       - SPRING_DATASOURCE_USERNAME=user_identidade
@@ -192,12 +209,11 @@ services:
       args:
         - SERVICE_NAME=notificacoes-service
     container_name: notificacoes-service
+    profiles: ["apps"]
     ports:
-      - "8084:8084" # Porta interna exposta para o serviço de notificações
+      - "8084:8084"
     environment:
-      # Dizemos ao Spring Boot onde está o broker do Kafka para ele ouvir os tópicos
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      # Configuração reativa das variáveis do Mailhog
       - SPRING_MAIL_HOST=mailhog
       - SPRING_MAIL_PORT=1025
     networks:
@@ -205,6 +221,25 @@ services:
     depends_on:
       - kafka
       - mailhog
+
+  pagamentos-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - SERVICE_NAME=pagamentos-service
+    container_name: pagamentos-service
+    profiles: ["apps"]
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+    networks:
+      - mercadinhos-net
+    depends_on:
+      - kafka
+      - postgres-pagamentos
+
   # ==========================================
   # 4. FRONTEND (ANGULAR)
   # ==========================================
@@ -219,3 +254,54 @@ services:
       - mercadinhos-net
     depends_on:
       - identidade-service
+
+  # ==========================================
+  # 5. STORAGE CLOUD INTEGRATION (MinIO)
+  # ==========================================
+  minio:
+    image: minio/minio:latest
+    container_name: mercados-storage-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - mercadinhos-net
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: devotemadmin
+      MINIO_ROOT_PASSWORD: devotionsecretpass
+    command: server /data --console-address ":9001"
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: mercados-storage-initializer
+    depends_on:
+      - minio
+    networks:
+      - mercadinhos-net
+    volumes:
+      # Injeta a tua pasta local de imagens dentro do contentor
+      - ./storage-init:/init-data
+    entrypoint: >
+      /bin/sh -c "
+      echo '⏳ Aguardando arranque seguro do servidor MinIO...';
+      sleep 5;
+      
+      echo '🔗 Configurando ligação interna com o MinIO...';
+      /usr/bin/mc alias set meu-minio http://minio:9000 devotemadmin devotionsecretpass;
+      
+      echo '📁 Criando a árvore de buckets necessários...';
+      /usr/bin/mc mb meu-minio/cartazes-bucket meu-minio/candidaturas-bucket meu-minio/feirantes-bucket || true;
+      
+      echo '🔓 Definindo políticas públicas de leitura para a CDN da Gateway...';
+      /usr/bin/mc anonymous set public meu-minio/cartazes-bucket;
+      
+      echo '🚀 Injetando massa de ficheiros binários nos buckets...';
+      /usr/bin/mc cp --recursive /init-data/cartazes-bucket/ meu-minio/cartazes-bucket/ || true;
+      /usr/bin/mc cp --recursive /init-data/candidaturas-bucket/ meu-minio/candidaturas-bucket/ || true;
+      /usr/bin/mc cp --recursive /init-data/feirantes-bucket/ meu-minio/feirantes-bucket/ || true;
+      
+      echo '🟢 Configuração da Pasta Digital e CDN concluída com sucesso!';
+      exit 0;
+      "

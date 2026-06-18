@@ -8,7 +8,7 @@
     <h2 class="text-center text-3xl font-extrabold text-brand-dark tracking-tight">
       Área Profissional
     </h2>
-    <p class="mt-2 text-center text-sm text-slate-500 max-w">
+    <p class="mt-2 text-center text-sm text-slate-500">
       Acesso exclusivo para Autarquias, Juntas e Feirantes
     </p>
   </div>
@@ -18,6 +18,7 @@
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
 
+        <!-- Campo: E-mail -->
         <div>
           <label for="email" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
             E-mail de Acesso
@@ -32,6 +33,7 @@
           </div>
         </div>
 
+        <!-- Campo: Palavra-passe -->
         <div>
           <label for="password" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
             Palavra-passe
@@ -46,12 +48,10 @@
           </div>
         </div>
 
-        @if (errorMessage()) {
-        <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-2 animate-shake">
-          <span>⚠️</span> {{ errorMessage() }}
-        </div>
-        }
+        <!-- 🗑️ O bloco antigo @if(errorMessage) foi removido daqui! -->
+        <!-- O Toast Service encarrega-se agora de mandar o alerta para o topo do ecrã. -->
 
+        <!-- Botão de Submissão -->
         <div>
           <button type="submit"
                   [disabled]="loginForm.invalid || isLoading()"
@@ -71,8 +71,8 @@
 
       </form>
 
+      <!-- Links Úteis -->
       <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col gap-4 text-center">
-
         <p class="text-xs text-slate-400 leading-relaxed">
           É um feirante profissional e ainda não tem acesso?
           <a routerLink="/registo" class="font-bold text-slate-700 hover:text-brand-secondary underline transition-colors inline-block ml-1">
@@ -83,7 +83,6 @@
         <a routerLink="/mercados-vitrine" class="text-xs font-bold text-brand-secondary hover:text-emerald-700 transition-colors mt-1">
           ← Voltar à Vitrine Pública (Modo Cidadão)
         </a>
-
       </div>
 
     </div>

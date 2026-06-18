@@ -16,5 +16,6 @@ public class Feirante {
     private String nome;
     private String email;
     private String nif;
-    private String documentoAtividade; // Número do registo da DGAE ou similar
+    private String documentoAtividade;
+    private String documentoFinancas;
 }

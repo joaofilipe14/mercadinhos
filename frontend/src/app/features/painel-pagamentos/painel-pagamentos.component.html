@@ -1,0 +1,148 @@
+<div class="max-w-2xl mx-auto mt-10 p-4 font-sans antialiased text-slate-800">
+
+  <div *ngIf="isLoading()" class="text-center py-20 text-slate-400 font-medium text-sm animate-pulse">
+    🔄 A estabelecer ligação segura com a Gateway Multibanco...
+  </div>
+
+  <div *ngIf="!isLoading() && erro()" class="bg-rose-50 border border-rose-100 p-6 rounded-3xl text-center shadow-sm">
+    <span class="text-3xl">⚠️</span>
+    <h3 class="text-sm font-black text-rose-800 mt-2">Falha na Operação</h3>
+    <p class="text-xs text-rose-600 mt-1">{{ erro() }}</p>
+    <button routerLink="/mercados" class="mt-4 bg-white text-slate-700 font-bold border border-slate-200 py-2 px-4 rounded-xl text-xs transition-colors hover:bg-slate-50">
+      Voltar à Vitrine
+    </button>
+  </div>
+
+  <div *ngIf="!isLoading() && !erro() && candidatura()" class="space-y-6">
+
+    <div class="bg-white p-5 border border-slate-100 rounded-3xl shadow-sm flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl bg-amber-50 p-2 rounded-xl border border-amber-100 shadow-inner">🪙</span>
+        <div>
+          <h2 class="text-base font-black tracking-tight text-slate-800">Balcão Único de Faturação</h2>
+          <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Município de Loures • Licenciamento Geral</p>
+        </div>
+      </div>
+      <button routerLink="/perfil" class="text-[10px] text-slate-400 font-bold hover:text-slate-600 uppercase border border-slate-100 px-3 py-1.5 rounded-xl transition-all hover:bg-slate-50">
+        Cancelar
+      </button>
+    </div>
+
+    <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+      <div class="flex justify-between items-start border-b border-slate-100 pb-4 mb-5">
+        <div>
+          <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Inscrição de Feirante</span>
+          <h3 class="text-sm font-black text-slate-800 mt-0.5">{{ candidatura().mercado?.nome }}</h3>
+          <p class="text-xs text-slate-400">Candidato: {{ candidatura().feirante?.nome }}</p>
+        </div>
+        <div class="text-right">
+          <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Total a Liquidar</span>
+          <p class="text-xl font-black text-slate-800 tracking-tight mt-0.5">{{ candidatura().precoTotal | currency:'EUR' }}</p>
+          <p class="text-[10px] text-slate-400 italic">Taxa de Ocupação por {{ candidatura().dias }} dias</p>
+        </div>
+      </div>
+
+      @if (candidatura().estado === 'A_AGUARDAR_PAGAMENTO') {
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Selecione o Método de Pagamento:</p>
+      <div class="grid grid-cols-3 gap-2 p-1.5 bg-slate-50 rounded-2xl mb-6">
+
+        <button *ngIf="verificarPermissao('MULTIBANCO')"
+                (click)="metodoSelecionado.set('MB')"
+                [ngClass]="metodoSelecionado() === 'MB' ? 'bg-white text-blue-600 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-800'"
+                class="py-3 px-3 rounded-xl text-xs font-black transition-all flex flex-col items-center gap-1">
+          <span class="text-base">🟦</span> Multibanco
+        </button>
+
+        <button *ngIf="verificarPermissao('CREDIT_CARD')"
+                (click)="metodoSelecionado.set('CARD')"
+                [ngClass]="metodoSelecionado() === 'CARD' ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-800'"
+                class="py-3 px-3 rounded-xl text-xs font-black transition-all flex flex-col items-center gap-1">
+          <span class="text-base">💳</span> Cartão de Crédito
+        </button>
+
+        <button *ngIf="verificarPermissao('TRANSFERENCIA')"
+                (click)="metodoSelecionado.set('IBAN')"
+                [ngClass]="metodoSelecionado() === 'IBAN' ? 'bg-white text-emerald-600 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-800'"
+                class="py-3 px-3 rounded-xl text-xs font-black transition-all flex flex-col items-center gap-1">
+          <span class="text-base">🏦</span> Transferência SEPA
+        </button>
+      </div>
+
+      <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-inner mb-6">
+
+        <div *ngIf="metodoSelecionado() === 'MB'" class="space-y-3 font-mono text-xs max-w-sm mx-auto">
+          <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-400 font-sans font-bold">Entidade:</span><span class="font-black tracking-widest">21898</span></div>
+          <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-400 font-sans font-bold">Referência:</span><span class="font-black tracking-widest">{{ gerarReferenciaMb(candidatura().id) }}</span></div>
+          <div class="flex justify-between"><span class="text-slate-400 font-sans font-bold">Montante:</span><span class="font-black text-blue-600">{{ candidatura().precoTotal | currency:'EUR' }}</span></div>
+        </div>
+
+        <div *ngIf="metodoSelecionado() === 'CARD'" class="space-y-3 max-w-md mx-auto animate-fade-in text-left">
+          <div>
+            <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Nome do Titular</label>
+            <input type="text" [(ngModel)]="dadosCartao.titular" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-400" placeholder="Ex: Maria Silva" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Número do Cartão</label>
+            <input type="text" [(ngModel)]="dadosCartao.numero" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs tracking-widest focus:outline-none focus:border-indigo-400" placeholder="4532 •••• •••• ••••" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Validade</label>
+              <input type="text" [(ngModel)]="dadosCartao.validade" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-center focus:outline-none focus:border-indigo-400" placeholder="MM/AA" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">CVC / CVV</label>
+              <input type="text" [(ngModel)]="dadosCartao.cvc" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-center focus:outline-none focus:border-indigo-400" placeholder="123" />
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="metodoSelecionado() === 'IBAN'" class="space-y-3 font-mono text-xs max-w-md mx-auto animate-fade-in text-left">
+          <p class="font-sans text-slate-400 text-[11px] leading-normal mb-2">Transfira o montante exato para o IBAN oficial da tesouraria autárquica e indique o ID da candidatura no descritivo.</p>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <span class="text-[9px] font-sans font-black text-slate-400 uppercase">IBAN de Destino</span>
+            <p class="font-black text-slate-700 tracking-tight mt-0.5">PT50 0033 0000 1234 5678 9012 3</p>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <span class="text-[9px] font-sans font-black text-slate-400 uppercase">Descritivo Obrigatório</span>
+            <p class="font-black text-emerald-600 mt-0.5">MERCADINHOS-ID-{{ candidatura().id }}</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="max-w-sm mx-auto">
+        <button (click)="efetuarPagamento()"
+                [disabled]="isPagando()"
+                [ngClass]="{
+                    'bg-blue-600 hover:bg-blue-700': metodoSelecionado() === 'MB',
+                    'bg-indigo-600 hover:bg-indigo-700': metodoSelecionado() === 'CARD',
+                    'bg-emerald-600 hover:bg-emerald-700': metodoSelecionado() === 'IBAN'
+                  }"
+                class="w-full text-white font-black py-4 px-6 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 disabled:opacity-50">
+          {{ isPagando() ? '⚡ A Processar Autorização Eletrónica...' : '🔒 Confirmar e Pagar Taxa' }}
+        </button>
+      </div>
+      }
+
+      <p *ngIf="candidatura().estado === 'A_AGUARDAR_PAGAMENTO'" class="text-[9px] text-center text-slate-400 mt-4 italic">
+        Conexão encriptada e processada sob regulamento comunitário de taxas locais.
+      </p>
+    </div>
+
+    <div *ngIf="candidatura().estado === 'APROVADA'"
+         class="bg-emerald-50/90 border border-emerald-100 rounded-3xl p-6 text-center shadow-sm animate-scale-up">
+      <span class="text-3xl inline-block bg-white shadow-sm border border-emerald-100 p-2 rounded-2xl">🏆</span>
+      <h4 class="text-sm font-black uppercase tracking-wider text-emerald-800 mt-3">Licenciamento Concluído com Sucesso!</h4>
+      <p class="text-xs text-emerald-600 max-w-md mx-auto mt-1">
+        A transação foi validada pela base de dados de pagamentos e sincronizada via Kafka. O seu lugar no recinto está **100% garantido**.
+      </p>
+      <div class="pt-4">
+        <button routerLink="/perfil" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 px-6 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md">
+          🎪 Voltar ao meu Perfil
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

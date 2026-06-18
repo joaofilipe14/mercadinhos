@@ -3,10 +3,11 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
+import { ToastService } from '../../core/services/toast.service';
 import { InscricaoModalComponent } from '../../core/components/inscricao-modal/inscricao-modal.component';
 import { MercadoDetalhesModalComponent } from '../../core/components/mercado-detalhes-modal/mercado-detalhes-modal.component';
 
-import * as L from 'leaflet'; // O motor do mapa!
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-mercados-vitrine',
@@ -22,59 +23,68 @@ import * as L from 'leaflet'; // O motor do mapa!
 export class MercadosVitrineComponent implements OnInit {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private platformId = inject(PLATFORM_ID); // Para saber se o código está a correr no Browser
+  private toastService = inject(ToastService);
+  private platformId = inject(PLATFORM_ID);
+
   private latitudeCache: number | null = null;
   private longitudeCache: number | null = null;
   private marcadorCentroUtilizador: L.CircleMarker | null = null;
   private camadaCirculoRaio: L.Circle | null = null;
-  // 🎯 Estado Reativo
+
+  // Estado Reativo Principal
   mercados = signal<any[]>([]);
-  raioKm = signal<number>(25); // Começa nos 25 km por defeito
-  pesquisa = signal<string>('');
+  paginaAtual = signal<number>(0);
+  isUltimaPagina = signal<boolean>(false);
+  raioKm = signal<number>(25);
   mapa: L.Map | undefined;
   isPesquisandoGps = signal<boolean>(false);
-  // 🎯 Gestão de Inscrições / Modal
+
+  // 🐾 FILTROS ADICIONAIS DE COMODIDADES
+  apenasPetFriendly = signal<boolean>(false);
+  apenasComWc = signal<boolean>(false);
+
+  // Gestão de Inscrições / Modais
   isModalAberto = signal<boolean>(false);
   mercadoSelecionado = signal<any>(null);
   inscricoesFeitas = signal<number[]>([]);
-  isDetalhesAberto = signal<boolean>(false); // 🔍 NOVO CONTROLADOR
+  isDetalhesAberto = signal<boolean>(false);
   mercadoDetalhes = signal<any>(null);
-  // 🎯 O Mapa Leaflet
+
   userRole = computed(() => this.authService.currentUser()?.role || '');
   isFeirante = computed(() => this.userRole() === 'ROLE_FEIRANTE');
   isMunicipio = computed(() => this.userRole() === 'ROLE_MUNICIPO');
 
-  // Dados fictícios para a barra lateral
   noticias = signal([
     { id: 1, titulo: 'Feira das Mercês regressa já este fim de semana', autoria: 'Câmara Municipal' },
     { id: 2, titulo: 'Novas vagas abertas para mercados sazonais de Verão', autoria: 'Junta de Freguesia' }
   ]);
 
+  // 🎯 FILTRAGEM REATIVA EM TEMPO REAL (Para PetFriendly e WC)
+  mercadosExibidos = computed(() => {
+    const filtrados = this.mercados().filter(m => {
+      const cumprePet = !this.apenasPetFriendly() || m.petFriendly;
+      const cumpreWc = !this.apenasComWc() || m.temWc;
+      return cumprePet && cumpreWc;
+    });
+    return filtrados.sort((a: any, b: any) => {
+      return new Date(a.dataInicio).getTime() - new Date(b.dataInicio).getTime();
+    });
+  });
+
   ngOnInit() {
-    this.carregarMercadosProximos();
-
-    if (this.isFeirante()) {
-      this.carregarInscricoesExistentes();
-    }
-
-    // Só inicia o mapa se estivermos num Browser real (evita erros no Angular SSR)
+    this.carregarMercadosProximos(true);
     if (isPlatformBrowser(this.platformId)) {
       setTimeout(() => this.iniciarMapa(), 100);
     }
   }
 
-  // ==========================================
-  // 🗺️ MAGIA DO MAPA E GEOLOCALIZAÇÃO
-  // ==========================================
-
   iniciarMapa() {
-    // Inicia focado no centro de Portugal
     this.mapa = L.map('mapa-vitrine').setView([39.3999, -8.2245], 6);
 
-    // Carrega o desenho do mapa (estradas, cidades, etc)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
     }).addTo(this.mapa);
+
     setTimeout(() => {
       this.mapa?.invalidateSize();
       if (this.mercados().length > 0) {
@@ -83,58 +93,79 @@ export class MercadosVitrineComponent implements OnInit {
     }, 500);
   }
 
-  carregarMercadosProximos() {
-    this.http.get<any[]>('http://localhost:8080/api/mercados').subscribe({
-      next: (dados) => {
-        this.mercados.set(dados);
-        this.adicionarMarcadoresNoMapa(dados);
+  // 🎯 ATUALIZADO: Nome dos parâmetros unificado com o "respostaPaged"
+  carregarMercadosProximos(resetarLista = false) {
+    if (resetarLista) {
+      this.paginaAtual.set(0);
+    }
+
+    const url = `http://localhost:8080/api/mercados?page=${this.paginaAtual()}&size=5`;
+
+    this.http.get<any>(url).subscribe({
+      next: (respostaPaged: any) => {
+        // Proteção: extrai a lista quer venha como Page do Spring ou como Array nativo
+        const novosMercados = respostaPaged.content || respostaPaged;
+        const ultimo = respostaPaged.page
+          ? (respostaPaged.page.number + 1) >= respostaPaged.page.totalPages
+          : (respostaPaged.last !== undefined ? respostaPaged.last : true);
+
+        if (resetarLista) {
+          this.mercados.set(novosMercados);
+        } else {
+          this.mercados.update(listaAntiga => [...listaAntiga, ...novosMercados]);
+        }
+
+        this.adicionarMarcadoresNoMapa(this.mercados());
+        this.isUltimaPagina.set(ultimo);
       },
       error: (err) => console.error('Erro ao carregar montra de mercados', err)
     });
   }
 
+  carregarProximaPagina() {
+    this.paginaAtual.update(p => p + 1);
+    this.carregarMercadosProximos(false);
+  }
+
   procurarComGPS() {
     if (!isPlatformBrowser(this.platformId)) return;
     this.isPesquisandoGps.set(true);
+
     if (this.latitudeCache !== null && this.longitudeCache !== null) {
       this.centralizarMapaNoUtilizador(this.latitudeCache, this.longitudeCache);
-      this.carregarMercadosPorRaioGps(this.latitudeCache, this.longitudeCache);
+      this.carregarMercadosPorRaioGps(this.latitudeCache, this.longitudeCache, true);
       return;
     }
 
-    // 🔒 PASSO 2: Se é a primeira vez, pedimos autorização formal ao browser
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (posicao) => {
-          // Guardamos os dados na cache para as próximas jogadas do slider
           this.latitudeCache = posicao.coords.latitude;
           this.longitudeCache = posicao.coords.longitude;
-          // Desenha o pino azul de onde o utilizador está no mapa Leaflet
           this.centralizarMapaNoUtilizador(this.latitudeCache, this.longitudeCache);
-          // Faz a chamada ao backend mercados-service
-          this.carregarMercadosPorRaioGps(this.latitudeCache, this.longitudeCache);
-        },(erro) => {
+          this.carregarMercadosPorRaioGps(this.latitudeCache, this.longitudeCache, true);
+        },
+        (erro) => {
           console.error('❌ Erro ou recusa de acesso ao GPS:', erro);
-          alert('Para pesquisar feiras perto de si, por favor ative a autorização de localização no seu navegador.');
+          this.toastService.show('Ative a localização no navegador para ver feiras perto de si.', 'info', 'Geolocalização');
           this.isPesquisandoGps.set(false);
-        },{
+        },
+        {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: Infinity // 🎯 Permite ao browser reutilizar a última posição conhecida do SO
+          maximumAge: Infinity
         }
       );
     } else {
-      alert('O seu navegador não suporta geolocalização por GPS.');
+      this.toastService.show('O seu navegador não suporta geolocalização.', 'error', 'Erro de Hardware');
       this.isPesquisandoGps.set(false);
     }
   }
 
   adicionarMarcadoresNoMapa(mercadosDaApi: any[]) {
     if (!this.mapa) return;
-    // Limpa os pinos antigos
     this.mapa.eachLayer((layer) => { if (layer instanceof L.Marker) this.mapa?.removeLayer(layer); });
 
-    // Ícone 🎪 personalizado (Emoji)
     const iconeTenda = L.divIcon({
       html: '<div class="text-3xl drop-shadow-md">🎪</div>',
       className: 'bg-transparent border-0',
@@ -146,7 +177,6 @@ export class MercadosVitrineComponent implements OnInit {
       if (m.latitude && m.longitude) {
         L.marker([m.latitude, m.longitude], { icon: iconeTenda })
           .addTo(this.mapa!)
-          // 🎯 NOVO FLUXO UX: Clicar no pino do mapa abre diretamente a Ficha de Detalhes Completa!
           .on('click', () => this.abrirDetalhes(m));
       }
     });
@@ -161,20 +191,6 @@ export class MercadosVitrineComponent implements OnInit {
     this.isDetalhesAberto.set(false);
     this.mercadoDetalhes.set(null);
   }
-  // ==========================================
-  // 📝 MAGIA DAS INSCRIÇÕES E MODAL
-  // ==========================================
-
-  carregarInscricoesExistentes() {
-    const emailFeirante = this.authService.currentUser()?.email;
-    if (!emailFeirante) return;
-
-    this.http.get<number[]>(`http://localhost:8080/api/candidaturas/inscritas?email=${emailFeirante}`)
-      .subscribe({
-        next: (ids) => this.inscricoesFeitas.set(ids),
-        error: (err) => console.error('Erro ao recuperar histórico de inscrições', err)
-      });
-  }
 
   abrirInscricao(mercado: any) {
     this.mercadoSelecionado.set(mercado);
@@ -188,56 +204,71 @@ export class MercadosVitrineComponent implements OnInit {
 
   handleSucessoCandidatura() {
     this.fecharModal();
-    this.carregarInscricoesExistentes();
-    this.carregarMercadosProximos();
-    alert('Candidatura efetuada com sucesso! A autarquia irá agora avaliar o seu processo.');
+    this.carregarMercadosProximos(true);
+    this.toastService.show('Candidatura submetida com sucesso! Aguarde o parecer técnico da autarquia.', 'success', 'Inscrição Efetuada');
   }
 
-  private carregarMercadosPorRaioGps(lat: number, lng: number) {
-    const url = `http://localhost:8080/api/mercados/proximos?lat=${lat}&lng=${lng}&raio=${this.raioKm()}`;
+  private carregarMercadosPorRaioGps(lat: number, lng: number, resetarLista = false) {
+    if (resetarLista) {
+      this.paginaAtual.set(0);
+    }
+    const url = `http://localhost:8080/api/mercados/proximos?lat=${lat}&lng=${lng}&raio=${this.raioKm()}&page=${this.paginaAtual()}&size=5`;
 
-    this.http.get<any[]>(url).subscribe({
-      next: (dados) => {
-        if (!dados || dados.length === 0) {
-          alert(`Nenhuma feira encontrada a ${this.raioKm()}km da sua posição real. A carregar todos os mercados gerais para efeitos de demonstração!`);
+    this.http.get<any>(url).subscribe({
+      next: (respostaPaged: any) => {
+        const novosMercados = respostaPaged.content || respostaPaged;
+        const ultimo = respostaPaged.page
+          ? (respostaPaged.page.number + 1) >= respostaPaged.page.totalPages
+          : (respostaPaged.last !== undefined ? respostaPaged.last : true);
 
-          // Fallback automático: Carrega os mercados normais aprovados
-          this.http.get<any[]>('http://localhost:8080/api/mercados').subscribe(todos => {
-            this.mercados.set(todos);
-            this.adicionarMarcadoresNoMapa(todos);
-            this.isPesquisandoGps.set(false);
-          });
+        if (!novosMercados || novosMercados.length === 0) {
+          this.mercados.set([]);
+
+          // 2. Limpa os marcadores (tendas 🎪) antigos do mapa Leaflet
+          this.adicionarMarcadoresNoMapa([]);
+
+          // 3. Desliga os controlos de paginação e carregamento
+          this.isUltimaPagina.set(true);
+          this.isPesquisandoGps.set(false);
+
+          // 4. Lança um aviso explícito e honesto ao utilizador
+          this.toastService.show(`Não encontrámos feiras num raio de ${this.raioKm()}km da sua posição.`, 'info', 'Sem Cobertura');
         } else {
-          this.mercados.set(dados);
-          this.adicionarMarcadoresNoMapa(dados);
+          if (resetarLista) {
+            this.mercados.set(novosMercados);
+          } else {
+            this.mercados.update(listaAntiga => [...listaAntiga, ...novosMercados]);
+          }
+          this.adicionarMarcadoresNoMapa(this.mercados());
+          this.isUltimaPagina.set(ultimo);
           this.isPesquisandoGps.set(false);
         }
       },
       error: (err) => {
         console.error('Erro na rota de GPS:', err);
-        this.http.get<any[]>('http://localhost:8080/api/mercados').subscribe({
-          next: (todos) => {
-            this.mercados.set(todos);
-            this.adicionarMarcadoresNoMapa(todos);
-            this.isPesquisandoGps.set(false); // 🎯 🔓 Liberta o botão
-          },
-          error: () => this.isPesquisandoGps.set(false)
-        });
+        this.isPesquisandoGps.set(false);
       }
     });
   }
 
-  /**
-   * 🗺️ Desenha ou move o indicador visual do utilizador no mapa
-   */
+  alterarRaio(event: any) {
+    const novoRaio = Number(event.target.value);
+    this.raioKm.set(novoRaio);
+
+    // 🐾 UX EM TEMPO REAL: Se o utilizador já tiver as coordenadas GPS ativas,
+    // redesenha o círculo verde e recarrega os mercados do servidor imediatamente!
+    if (this.latitudeCache !== null && this.longitudeCache !== null) {
+      this.centralizarMapaNoUtilizador(this.latitudeCache, this.longitudeCache);
+      this.carregarMercadosPorRaioGps(this.latitudeCache, this.longitudeCache, true); // true faz o reset da lista
+    }
+  }
+
   private centralizarMapaNoUtilizador(lat: number, lng: number) {
     if (!this.mapa) return;
 
-    // 🧹 PASSO 1: Limpar os desenhos anteriores do mapa para não acumular lixo visual
     if (this.marcadorCentroUtilizador) this.mapa.removeLayer(this.marcadorCentroUtilizador);
     if (this.camadaCirculoRaio) this.mapa.removeLayer(this.camadaCirculoRaio);
 
-    // Ajusta o zoom do mapa automaticamente baseado no tamanho do raio
     let zoomDinamico = 11;
     if (this.raioKm() > 60) zoomDinamico = 8;
     else if (this.raioKm() > 35) zoomDinamico = 9;
@@ -245,23 +276,20 @@ export class MercadosVitrineComponent implements OnInit {
 
     this.mapa.setView([lat, lng], zoomDinamico);
 
-    // 🟢 2. CÍRCULO GRANDE DE COBERTURA (Raio em metros)
-    // Multiplicamos por 1000 porque o Leaflet pede o raio estrutural em metros
     this.camadaCirculoRaio = L.circle([lat, lng], {
       radius: this.raioKm() * 1000,
-      color: '#10b981',       // Linha de contorno Verde Esmeralda (Tailwind emerald-500)
-      weight: 2,              // Espessura da linha
-      dashArray: '6, 6',      // Linha tracejada moderna
-      fillColor: '#10b981',   // Preenchimento verde
-      fillOpacity: 0.12       // Opacidade muito suave para não tapar as estradas do mapa
+      color: '#10b981',
+      weight: 2,
+      dashArray: '6, 6',
+      fillColor: '#10b981',
+      fillOpacity: 0.12
     }).addTo(this.mapa);
 
-    // 🟢 3. PONTO CENTRAL FIXO (Onde o utilizador está)
     this.marcadorCentroUtilizador = L.circleMarker([lat, lng], {
       radius: 7,
-      color: '#ffffff',       // Borda branca pura para dar contraste
+      color: '#ffffff',
       weight: 2,
-      fillColor: '#10b981',   // Centro preenchido a verde esmeralda firme
+      fillColor: '#10b981',
       fillOpacity: 1
     }).bindPopup(`<b>A sua localização base</b><br>Pesquisando num raio de ${this.raioKm()} km.`)
       .addTo(this.mapa);

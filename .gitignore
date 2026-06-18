@@ -5,3 +5,6 @@
 /backend/cidadaos-service/target/
 /backend/feirantes-service/target/
 /frontend/node_modules/
+/uploads/
+/storage-init/
+.aider*

@@ -5,6 +5,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import pt.devoteam.mercados.dto.CandidaturaDTO;
 import pt.devoteam.mercados.entity.Candidatura;
 import pt.devoteam.mercados.entity.enums.TipoDocumento;
 import pt.devoteam.mercados.service.CandidaturaService;
@@ -21,13 +22,20 @@ public class CandidaturaController {
         this.candidaturaService = candidaturaService;
     }
 
-    @PostMapping("/submeter")
-    public ResponseEntity<String> submeter(
-            @RequestParam("mercadoId") Long mercadoId,
-            @RequestParam("feiranteEmail") String feiranteEmail,
-            @RequestParam(value = "pdfFiles", required = false) List<MultipartFile> pdfFiles) {
+    @GetMapping("/{id}")
+    public ResponseEntity<Candidatura> obterCandidaturaPorId(@PathVariable Long id) {
         try {
-            candidaturaService.submeterCandidatura(mercadoId, feiranteEmail, pdfFiles);
+            Candidatura candidatura = candidaturaService.obterCandidaturaPorId(id);
+            return ResponseEntity.ok(candidatura);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/submeter")
+    public ResponseEntity<String> submeter(@ModelAttribute CandidaturaDTO dto) {
+        try {
+            candidaturaService.submeterCandidatura(dto);
             return ResponseEntity.ok("Candidatura submetida e vaga reservada com sucesso!");
         } catch (IllegalStateException e) {
             return ResponseEntity.status(400).body(e.getMessage());

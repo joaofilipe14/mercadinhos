@@ -1,5 +1,6 @@
 <div class="max-w-5xl mx-auto p-6 font-sans selection:bg-brand-secondary selection:text-white">
 
+  <!-- Cabeçalhos de Identidade Visual -->
   <div class="mb-8 border-b border-slate-100 pb-5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
     <div>
       @if (currentUser()?.role === 'ROLE_MUNICIPO') {
@@ -24,19 +25,9 @@
     </div>
   </div>
 
-  @if (mensagemSucesso()) {
-  <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2 animate-fade-in">
-    <span>🎉</span> {{ mensagemSucesso() }}
-  </div>
-  }
-  @if (mensagemErro()) {
-  <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-2 animate-fade-in">
-    <span>⚠️</span> {{ mensagemErro() }}
-  </div>
-  }
-
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
+    <!-- Formuário Principal de Dados Fiscais -->
     <div [ngClass]="currentUser()?.role === 'ROLE_FEIRANTE' ? 'lg:col-span-2' : 'lg:col-span-3'"
          class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
 
@@ -99,52 +90,170 @@
       </form>
     </div>
 
+    <!-- Painel Lateral: Histórico de Inscrições e Pasta Digital do Feirante -->
     @if (currentUser()?.role === 'ROLE_FEIRANTE') {
     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between animate-fade-in">
+
       <div>
+        <div class="border-b border-slate-100 pb-4 mb-6">
+          <h3 class="text-sm font-bold tracking-tight uppercase text-slate-400 tracking-wider">🎪 O Meu Balcão de Inscrições</h3>
+          <p class="text-xs text-slate-400 mt-1">Acompanhe o parecer técnico da câmara e proceda à liquidação de taxas emitidas.</p>
+        </div>
+
+        @if (isLoadingHistorico()) {
+        <div class="text-center py-8 text-slate-400 text-xs font-bold animate-pulse">
+          🔄 A sincronizar os seus dossiês com o Município...
+        </div>
+        } @else {
+        @if (meuHistorico().length === 0) {
+        <div class="text-center py-10 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 mb-6">
+          <span class="text-xl">🎪</span>
+          <p class="text-xs text-slate-500 font-medium mt-2">Ainda não submeteu nenhuma candidatura para os mercados abertos.</p>
+          <button routerLink="/mercados-vitrine" class="mt-3 bg-blue-600 text-white font-bold py-2 px-4 rounded-xl text-[11px] uppercase tracking-wider shadow-sm transition-all hover:bg-blue-700">
+            Explorar Feiras Ativas
+          </button>
+        </div>
+        } @else {
+        <div class="overflow-hidden border border-slate-100 rounded-xl shadow-sm mb-6">
+          <table class="min-w-full bg-white">
+            <thead class="bg-slate-50/70 border-b border-slate-100">
+            <tr>
+              <th class="py-3 px-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-wider">Evento</th>
+              <th class="py-3 px-2 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">Custo</th>
+              <th class="py-3 px-2 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">Estado</th>
+              <th class="py-3 px-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">Ação</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+            @for (c of meuHistorico(); track c.id) {
+            <tr class="hover:bg-slate-50/50 transition-colors">
+              <td class="py-3 px-4">
+                <p class="text-xs font-bold text-slate-800 leading-tight">{{ c.mercado?.nome }}</p>
+                <p class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[100px]">📍 {{ c.mercado?.localizacao }}</p>
+              </td>
+              <td class="py-3 px-2 text-center text-xs font-bold text-slate-700">
+                {{ c.precoTotal | currency:'EUR' }}
+              </td>
+              <td class="py-3 px-2 text-center">
+                        <span class="px-2 py-0.5 inline-flex text-[8px] font-black uppercase tracking-wider rounded-md border"
+                              [ngClass]="{
+                                'bg-amber-50 text-amber-700 border-amber-200/40': c.estado === 'PENDENTE',
+                                'bg-blue-50 text-blue-700 border-blue-200/40': c.estado === 'A_AGUARDAR_PAGAMENTO',
+                                'bg-emerald-50 text-emerald-700 border-emerald-200/40': c.estado === 'APROVADA',
+                                'bg-rose-50 text-rose-700 border-rose-200/40': c.estado === 'REJEITADA'
+                              }">
+                          {{ traduzirEstado(c.estado) }}
+                        </span>
+              </td>
+              <td class="py-3 px-4 text-center">
+                @if (c.estado === 'A_AGUARDAR_PAGAMENTO') {
+                <button [routerLink]="['/painel/pagamentos']" [queryParams]="{ id: c.id }" class="bg-amber-500 hover:bg-amber-600 text-white font-black py-1 px-2.5 rounded-xl text-[9px] uppercase tracking-wider transition-all shadow-sm active:scale-95">💳 Pagar</button>
+                } @else if (c.estado === 'APROVADA') {
+                <span class="text-[9px] font-bold text-emerald-500">🛡️ Ativo</span>
+                } @else if (c.estado === 'PENDENTE') {
+                <span class="text-[9px] text-slate-400 italic">Análise</span>
+                } @else if (c.estado === 'REJEITADA') {
+                <span class="text-[9px] text-rose-400 font-medium">Recusado</span>
+                }
+              </td>
+            </tr>
+            }
+            </tbody>
+          </table>
+        </div>
+        }
+        }
+      </div>
+      <div class="mt-4">
         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-3 mb-4">
           Pasta Digital de Ficheiros
         </h3>
         <p class="text-[11px] text-slate-400 leading-relaxed mb-4">
-          Deixe guardados aqui os seus documentos permanentes. Ao candidatar-se a feiras autárquicas, eles serão associados de forma automática!
+          Arraste os seus documentos oficiais diretamente para as áreas abaixo ou clique em anexar. Eles serão associados automaticamente às suas candidaturas!
         </p>
 
-        <div class="space-y-3">
-          <div class="p-3 border border-slate-100 rounded-xl flex items-center justify-between text-xs"
-               [ngClass]="temDocAtividade() ? 'bg-emerald-50/20 border-emerald-100' : 'bg-slate-50/60'">
-            <div class="truncate pr-2">
-              <p class="font-bold text-slate-700 truncate">Declaração de Atividade</p>
-              <p class="text-[10px] font-medium" [ngClass]="temDocAtividade() ? 'text-emerald-600' : 'text-slate-400'">
-                {{ temDocAtividade() ? '🟢 Arquivado no Perfil' : '⚪ Pendente de Anexo' }}
-              </p>
+        <div class="space-y-4">
+
+          <div (dragover)="onDragOver($event, 'INICIO_ACTIVIDADE')"
+               (dragleave)="onDragLeave($event, 'INICIO_ACTIVIDADE')"
+               (drop)="onDropFile($event, 'INICIO_ACTIVIDADE')"
+               [ngClass]="{
+                 'bg-emerald-50/20 border-emerald-300 ring-2 ring-emerald-400/20': temDocAtividade() && !isHoveringAtividade(),
+                 'bg-blue-50/40 border-blue-400 border-dashed scale-[1.01] shadow-inner': isHoveringAtividade(),
+                 'bg-slate-50/60 border-slate-200 border-dashed': !temDocAtividade() && !isHoveringAtividade()
+               }"
+               class="p-4 border-2 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs transition-all duration-200 group">
+
+            <div class="truncate pr-2 flex items-center gap-3">
+              <span class="text-xl select-none group-hover:scale-110 transition-transform">
+                {{ temDocAtividade() ? '📄' : '📥' }}
+              </span>
+              <div class="truncate">
+                <p class="font-bold text-slate-700 truncate">Declaração de Início de Atividade</p>
+                <p class="text-[10px] font-medium mt-0.5" [ngClass]="temDocAtividade() ? 'text-emerald-600' : 'text-slate-400'">
+                  {{ isUploadingAtividade() ? '⚡ A transferir PDF...' : (isHoveringAtividade() ? '✨ Solte o ficheiro aqui!' : (temDocAtividade() ? '🟢 Arquivado com sucesso no Perfil' : '⚪ Arraste o PDF ou clique ao lado')) }}
+                </p>
+              </div>
             </div>
-            <label class="bg-white border border-slate-200 hover:border-brand-secondary text-slate-600 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer shadow-sm transition-colors select-none">
-              {{ temDocAtividade() ? 'Substituir' : 'Anexar' }}
-              <input type="file" (change)="uploadDocumentoPortfolio($event, 'INICIO_ACTIVIDADE')" accept="application/pdf" class="hidden" />
-            </label>
+
+            <input type="file" #fileAtividade (change)="uploadDocumentoPortfolio($event, 'INICIO_ACTIVIDADE')" accept="application/pdf" class="hidden" />
+
+            <button type="button"
+                    [disabled]="isUploadingAtividade()"
+                    (click)="manipularCliqueDocumento('INICIO_ACTIVIDADE', fileAtividade)"
+                    class="bg-white border border-slate-200 hover:border-brand-secondary text-slate-600 px-3.5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider cursor-pointer shadow-sm transition-all select-none disabled:opacity-50 min-w-[100px] text-center active:scale-95">
+              {{ isUploadingAtividade() ? 'A enviar...' : (temDocAtividade() ? 'Substituir' : 'Anexar PDF') }}
+            </button>
           </div>
 
-          <div class="p-3 border border-slate-100 rounded-xl flex items-center justify-between text-xs"
-               [ngClass]="temDocFinancas() ? 'bg-emerald-50/20 border-emerald-100' : 'bg-slate-50/60'">
-            <div class="truncate pr-2">
-              <p class="font-bold text-slate-700 truncate">Situação Regularizada AT</p>
-              <p class="text-[10px] font-medium" [ngClass]="temDocFinancas() ? 'text-emerald-600' : 'text-slate-400'">
-                {{ temDocFinancas() ? '🟢 Arquivado no Perfil' : '⚪ Pendente de Anexo' }}
-              </p>
+          <div (dragover)="onDragOver($event, 'NAO_DIVIDA_AT')"
+               (dragleave)="onDragLeave($event, 'NAO_DIVIDA_AT')"
+               (drop)="onDropFile($event, 'NAO_DIVIDA_AT')"
+               [ngClass]="{
+                 'bg-emerald-50/20 border-emerald-300 ring-2 ring-emerald-400/20': temDocFinancas() && !isHoveringFinancas(),
+                 'bg-blue-50/40 border-blue-400 border-dashed scale-[1.01] shadow-inner': isHoveringFinancas(),
+                 'bg-slate-50/60 border-slate-200 border-dashed': !temDocFinancas() && !isHoveringFinancas()
+               }"
+               class="p-4 border-2 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs transition-all duration-200 group">
+
+            <div class="truncate pr-2 flex items-center gap-3">
+              <span class="text-xl select-none group-hover:scale-110 transition-transform">
+                {{ temDocFinancas() ? '📜' : '📥' }}
+              </span>
+              <div class="truncate">
+                <p class="font-bold text-slate-700 truncate">Certidão de Situação Regularizada AT</p>
+                <p class="text-[10px] font-medium mt-0.5" [ngClass]="temDocFinancas() ? 'text-emerald-600' : 'text-slate-400'">
+                  {{ isUploadingFinancas() ? '⚡ A transferir PDF...' : (isHoveringFinancas() ? '✨ Solte o ficheiro aqui!' : (temDocFinancas() ? '🟢 Arquivado com sucesso no Perfil' : '⚪ Arraste o PDF ou clique ao lado')) }}
+                </p>
+              </div>
             </div>
-            <label class="bg-white border border-slate-200 hover:border-brand-secondary text-slate-600 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer shadow-sm transition-colors select-none">
-              {{ temDocFinancas() ? 'Substituir' : 'Anexar' }}
-              <input type="file" (change)="uploadDocumentoPortfolio($event, 'NAO_DIVIDA_AT')" accept="application/pdf" class="hidden" />
-            </label>
+
+            <input type="file" #fileFinancas (change)="uploadDocumentoPortfolio($event, 'NAO_DIVIDA_AT')" accept="application/pdf" class="hidden" />
+
+            <button type="button"
+                    [disabled]="isUploadingFinancas()"
+                    (click)="manipularCliqueDocumento('NAO_DIVIDA_AT', fileFinancas)"
+                    class="bg-white border border-slate-200 hover:border-brand-secondary text-slate-600 px-3.5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider cursor-pointer shadow-sm transition-all select-none disabled:opacity-50 min-w-[100px] text-center active:scale-95">
+              {{ isUploadingFinancas() ? 'A enviar...' : (temDocFinancas() ? 'Substituir' : 'Anexar PDF') }}
+            </button>
           </div>
+
         </div>
       </div>
 
-      <div class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100/60 p-3 rounded-xl mt-6 leading-normal">
-        🎯 <strong>Dica Gateway:</strong> As chamadas e os ficheiros batem na porta <code>8080</code>, que os encaminha de forma segura para a persistência correta de microsserviços.
-      </div>
     </div>
     }
 
   </div>
 </div>
+
+@if (isModalAvisoAberto()) {
+<app-confirmacao-modal
+  [titulo]="'Substituir Documento Oficial'"
+  [mensagem]="'Atenção: Já possui um ficheiro arquivado para esta categoria. Ao submeter um novo PDF, o documento anterior será permanentemente substituído e enviado para validação dos serviços municipais. Deseja continuar?'"
+  [confirmarTexto]="'Sim, Substituir'"
+  [cancelarTexto]="'Cancelar'"
+  (onConfirmar)="confirmarSubstituicao()"
+  (onCancelar)="isModalAvisoAberto.set(false); documentoPendenteSubstituicao.set(null)">
+</app-confirmacao-modal>
+}

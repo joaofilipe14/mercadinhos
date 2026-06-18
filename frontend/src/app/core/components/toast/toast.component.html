@@ -1,0 +1,39 @@
+@if (toast(); as t) {
+<div class="fixed top-5 right-5 z-50 max-w-sm w-full bg-white border rounded-2xl p-4 shadow-xl transition-all duration-300 transform flex items-start gap-3"
+     [ngClass]="{
+         'border-emerald-100 shadow-emerald-100/40': t.tipo === 'success',
+         'border-rose-100 shadow-rose-100/40': t.tipo === 'error',
+         'border-blue-100 shadow-blue-100/40': t.tipo === 'info'
+       }">
+
+  <!-- 📦 Ícone Condicional consoante o Tipo -->
+  <div class="p-2 rounded-xl text-lg flex items-center justify-center shadow-inner animate-pulse"
+       [ngClass]="{
+           'bg-emerald-50 text-emerald-600': t.tipo === 'success',
+           'bg-rose-50 text-rose-600': t.tipo === 'error',
+           'bg-blue-50 text-blue-600': t.tipo === 'info'
+         }">
+    {{ t.tipo === 'success' ? '✅' : t.tipo === 'error' ? '❌' : 'ℹ️' }}
+  </div>
+
+  <!-- 📝 Bloco Informativo de Texto -->
+  <div class="flex-1 pt-0.5">
+    <h4 class="text-xs font-black uppercase tracking-wider"
+        [ngClass]="{
+            'text-emerald-800': t.tipo === 'success',
+            'text-rose-800': t.tipo === 'error',
+            'text-blue-800': t.tipo === 'info'
+          }">
+      {{ t.titulo || (t.tipo === 'success' ? 'Sucesso' : t.tipo === 'error' ? 'Erro' : 'Informação') }}
+    </h4>
+    <p class="text-[11px] text-slate-500 mt-0.5 font-medium leading-relaxed">
+      {{ t.mensagem }}
+    </p>
+  </div>
+
+  <!-- ✕ Botão de Descarte Rápido -->
+  <button (click)="toastService.clear()" class="text-slate-300 hover:text-slate-500 text-xs font-bold px-1 transition-colors">
+    ✕
+  </button>
+</div>
+}
