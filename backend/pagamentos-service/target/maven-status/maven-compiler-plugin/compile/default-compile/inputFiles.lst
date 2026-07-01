@@ -1,0 +1,8 @@
+C:\feirasonline.pt\backend\pagamentos-service\src\main\java\pt\devoteam\pagamentos\controller\PagamentoController.java
+C:\feirasonline.pt\backend\pagamentos-service\src\main\java\pt\devoteam\pagamentos\dto\ProcessarPagamentoDTO.java
+C:\feirasonline.pt\backend\pagamentos-service\src\main\java\pt\devoteam\pagamentos\entity\Transacao.java
+C:\feirasonline.pt\backend\pagamentos-service\src\main\java\pt\devoteam\pagamentos\event\CandidaturaAprovadaEvent.java
+C:\feirasonline.pt\backend\pagamentos-service\src\main\java\pt\devoteam\pagamentos\event\PagamentoConcluidoEvent.java
+C:\feirasonline.pt\backend\pagamentos-service\src\main\java\pt\devoteam\pagamentos\PagamentosApplication.java
+C:\feirasonline.pt\backend\pagamentos-service\src\main\java\pt\devoteam\pagamentos\repository\TransacaoRepository.java
+C:\feirasonline.pt\backend\pagamentos-service\src\main\java\pt\devoteam\pagamentos\service\TransacaoService.java

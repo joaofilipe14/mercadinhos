@@ -53,7 +53,7 @@ public class CandidaturaController {
 
     @GetMapping("/mercado/{mercadoId}")
     public ResponseEntity<List<Candidatura>> obterCandidatos(@PathVariable Long mercadoId, @RequestHeader("X-User-Role") String role) {
-        if (!role.equals("ROLE_MUNICIPO") && !role.equals("ROLE_JUNTA")) {
+        if (!role.equals("ROLE_MUNICIPIO") && !role.equals("ROLE_JUNTA")) {
             return ResponseEntity.status(403).build();
         }
         return ResponseEntity.ok(candidaturaService.listarCandidaturasPorMercado(mercadoId));
@@ -65,7 +65,7 @@ public class CandidaturaController {
             @RequestParam("estado") pt.devoteam.mercados.entity.enums.EstadoCandidatura estado,
             @RequestHeader("X-User-Role") String role) {
 
-        if (!role.equals("ROLE_MUNICIPO") && !role.equals("ROLE_JUNTA")) {
+        if (!role.equals("ROLE_MUNICIPIO") && !role.equals("ROLE_JUNTA")) {
             return ResponseEntity.status(403).build();
         }
         candidaturaService.atualizarEstadoCandidatura(id, estado);

@@ -1,0 +1,8 @@
+pt\devoteam\pagamentos\controller\PagamentoController.class
+pt\devoteam\pagamentos\repository\TransacaoRepository.class
+pt\devoteam\pagamentos\dto\ProcessarPagamentoDTO.class
+pt\devoteam\pagamentos\PagamentosApplication.class
+pt\devoteam\pagamentos\event\PagamentoConcluidoEvent.class
+pt\devoteam\pagamentos\entity\Transacao.class
+pt\devoteam\pagamentos\event\CandidaturaAprovadaEvent.class
+pt\devoteam\pagamentos\service\TransacaoService.class

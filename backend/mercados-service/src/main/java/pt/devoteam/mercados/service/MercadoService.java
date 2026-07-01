@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64; // 🎯 ADICIONADO PARA DESCODIFICAÇÃO NATIVA
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,11 +41,6 @@ public class MercadoService {
     }
 
     @Transactional(readOnly = true)
-    public List<Mercado> listarTodos() {
-        return mercadoRepository.findAll();
-    }
-
-    @Transactional(readOnly = true)
     public List<Mercado> listarCriadosPor(String email) {
         return mercadoRepository.findByCriadoPor(email);
     }
@@ -61,7 +57,7 @@ public class MercadoService {
     public Mercado criarMercado(Mercado mercado, String role, String email) {
         mercado.setCriadoPor(email);
 
-        if ("ROLE_MUNICIPO".equals(role)) {
+        if ("ROLE_MUNICIPIO".equals(role)) {
             mercado.setEstado(EstadoMercado.APROVADO);
         } else {
             mercado.setEstado(EstadoMercado.PENDENTE);
@@ -224,7 +220,7 @@ public class MercadoService {
                     mercado.setDistancia(distancia);
                     return distancia <= raioKm;
                 })
-                .sorted((m1, m2) -> Double.compare(m1.getDistancia(), m2.getDistancia()))
+                .sorted(Comparator.comparingDouble(Mercado::getDistancia))
                 .toList();
 
         int start = (int) pageable.getOffset();

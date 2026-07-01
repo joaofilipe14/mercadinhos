@@ -3,6 +3,7 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/backend/camaras-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/backend/cidadaos-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/e2e-tests/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/backend/feirantes-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/backend/identidade-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/backend/mercados-service/src/main/java" charset="UTF-8" />

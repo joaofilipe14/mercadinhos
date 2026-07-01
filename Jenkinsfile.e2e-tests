@@ -1,0 +1,22 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('🛡️ Executar Testes E2E') {
+            steps {
+                sh """
+                    docker run --rm -v \$(pwd):/app -w /app/backend/e2e-tests \
+                    -e CI=true \
+                    -e FRONTEND_URL="http://frontend-ui:80" \
+                    markhobson/maven-chrome:jdk-21 \
+                    mvn clean test
+                """
+            }
+        }
+    }
+    post {
+        always {
+            junit allowEmptyResults: true, testResults: "**/target/surefire-reports/*.xml"
+        }
+    }
+}

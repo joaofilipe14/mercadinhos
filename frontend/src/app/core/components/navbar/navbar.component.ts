@@ -20,7 +20,7 @@ export class NavbarComponent {
   isLoggedIn = computed(() => this.currentUser() !== null);
 
   alertasCount = signal<number>(0);
-  isMunicipio = computed(() => this.currentUser()?.role === 'ROLE_MUNICIPO');
+  isMunicipio = computed(() => this.currentUser()?.role === 'ROLE_MUNICIPIO');
   isFeirante = computed(() => this.currentUser()?.role === 'ROLE_FEIRANTE');
 
   ngOnInit() {
@@ -52,7 +52,7 @@ export class NavbarComponent {
       }
     });
   }
-  
+
   getProfileRoute(): string {
     if (this.isMunicipio()) {
       return '/perfil/municipio';

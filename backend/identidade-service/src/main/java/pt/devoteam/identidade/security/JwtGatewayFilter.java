@@ -22,7 +22,8 @@ public class JwtGatewayFilter implements GlobalFilter, Ordered {
 
         // 1. Identifica se a rota é pública ou não
         boolean isRotaPublica = path.contains("/api/auth/") ||
-                (path.startsWith("/api/mercado") && "GET".equalsIgnoreCase(method));
+                ((path.startsWith("/api/mercado") && "GET".equalsIgnoreCase(method)) ||
+                        (path.startsWith("/cartazes-bucket") && "GET".equalsIgnoreCase(method)));
 
         // 2. Verifica se o cabeçalho Authorization existe
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);

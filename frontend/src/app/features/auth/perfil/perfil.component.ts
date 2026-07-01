@@ -59,7 +59,7 @@ export class PerfilComponent implements OnInit {
       const userEmail = user.email;
       if (user.role === 'ROLE_FEIRANTE') {
         this.carregarDadosExtraFeirante(userEmail);
-      } else if (user.role === 'ROLE_MUNICIPO') {
+      } else if (user.role === 'ROLE_MUNICIPIO') {
         this.carregarDadosExtraMunicipio(userEmail);
       }
     }
@@ -117,7 +117,7 @@ export class PerfilComponent implements OnInit {
     if (role === 'ROLE_FEIRANTE') {
       url = 'http://localhost:8080/api/feirantes/atualizar-perfil';
       payload = formRaw;
-    } else if (role === 'ROLE_MUNICIPO') {
+    } else if (role === 'ROLE_MUNICIPIO') {
       url = 'http://localhost:8080/api/municipios/atualizar-perfil';
       payload = {
         email: formRaw.email,

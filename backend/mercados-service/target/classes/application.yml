@@ -2,6 +2,9 @@ server:
   port: 8082
 
 spring:
+  threads:
+    virtual:
+      enabled: true
   application:
     name: mercados-service
   servlet:
@@ -40,3 +43,9 @@ spring:
     web:
       pageable:
         page-serialization-mode: via-dto
+minio:
+  endpoint: http://localhost:9000
+  accessKey: devotemadmin
+  secretKey: devotionsecretpass
+  bucket: cartazes-bucket
+  bucket-feirantes: feirantes-bucket

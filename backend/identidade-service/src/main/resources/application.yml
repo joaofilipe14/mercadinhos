@@ -2,6 +2,9 @@ server:
   port: 8080
 
 spring:
+  threads:
+    virtual:
+      enabled: true
   application:
     name: identidade-service
   main:
@@ -39,32 +42,36 @@ spring:
       routes:
         # 🎪 O Motor Central: Mercados, Vagas, Vitrine e Inscrições (PDFs)
         - id: mercados-service
-          uri: http://localhost:8082
+          uri: ${MERCADOS_SERVICE_URI:http://localhost:8082}
           predicates:
             - Path=/api/mercados/**, /api/candidaturas/**, /api/feirantes/**
 
         # 🏛️ Gestão Institucional: Câmaras, Juntas e Organizadores
         - id: municipios-service
-          uri: http://localhost:8081
+          uri: ${MUNICIPIOS_SERVICE_URI:http://localhost:8081}
           predicates:
             - Path=/api/municipios/**
 
         # 🧑‍🌾 População: Favoritos, Notificações e Avaliações
         - id: cidadaos-service
-          uri: http://localhost:8083
+          uri: ${CIDADAOS_SERVICE_URI:http://localhost:8083}
           predicates:
             - Path=/api/cidadaos/**
 
         - id: pagamentos-service
-          uri: http://localhost:8085
+          uri: ${PAGAMENTOS_SERVICE_URI:http://localhost:8085}
           predicates:
             - Path=/api/pagamentos/**
 
         - id: minio-mercados-cdn
-          uri: http://localhost:9000
+          uri: ${MINIO_SERVICE_URI:http://localhost:9000}
           predicates:
             - Path=/mercados-bucket/**
         - id: minio-perfis-cdn
-          uri: http://localhost:9000
+          uri: ${MINIO_SERVICE_URI:http://localhost:9000}
           predicates:
             - Path=/utilizadores-bucket/**
+        - id: minio-cartazes-cdn
+          uri: ${MINIO_SERVICE_URI:http://localhost:9000}
+          predicates:
+            - Path=/cartazes-bucket/**

@@ -8,6 +8,8 @@ import pt.devoteam.mercados.dto.FeiranteDTO;
 import pt.devoteam.mercados.entity.Feirante;
 import pt.devoteam.mercados.service.FeiranteService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/feirantes")
 public class FeiranteController {
@@ -32,6 +34,36 @@ public class FeiranteController {
             return ResponseEntity.ok(feiranteService.obterFeirantePorEmail(email));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * 🎯 NOVO ENDPOINT: Devolve a lista de códigos dos documentos que o feirante já tem arquivados.
+     * Consumido pelo modal do Angular para acender os badges de reaproveitamento.
+     */
+    @GetMapping("/perfil/documentos-ativos")
+    public ResponseEntity<List<String>> obterDocumentosAtivosDoPerfil(@RequestParam String email) {
+        try {
+            return ResponseEntity.ok(feiranteService.listarDocumentosAtivosDoPerfil(email));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * 🎯 NOVO ENDPOINT: Sincroniza e atualiza um documento específico na pasta digital do MinIO.
+     * Chamado em background quando o feirante opta por atualizar o perfil a partir da inscrição.
+     */
+    @PostMapping(value = "/perfil/atualizar-documento", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> atualizarDocumentoDoPerfil(
+            @RequestParam("email") String email,
+            @RequestParam("tipoDocumento") String tipoDocumento,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            feiranteService.guardarDocumentoNoPortfolio(email, tipoDocumento, file);
+            return ResponseEntity.ok("Pasta digital do feirante atualizada com sucesso no MinIO.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Falha ao sincronizar documento do perfil: " + e.getMessage());
         }
     }
 

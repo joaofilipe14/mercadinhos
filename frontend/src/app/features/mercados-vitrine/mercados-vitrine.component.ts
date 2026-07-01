@@ -52,7 +52,7 @@ export class MercadosVitrineComponent implements OnInit {
 
   userRole = computed(() => this.authService.currentUser()?.role || '');
   isFeirante = computed(() => this.userRole() === 'ROLE_FEIRANTE');
-  isMunicipio = computed(() => this.userRole() === 'ROLE_MUNICIPO');
+  isMunicipio = computed(() => this.userRole() === 'ROLE_MUNICIPIO');
 
   noticias = signal([
     { id: 1, titulo: 'Feira das Mercês regressa já este fim de semana', autoria: 'Câmara Municipal' },

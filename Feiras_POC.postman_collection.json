@@ -21,7 +21,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"nome\": \"Câmara Municipal de Leiria\",\n    \"email\": \"geral@cm-leiria.pt\",\n    \"password\": \"admin123\",\n    \"role\": \"ROLE_MUNICIPO\"\n}"
+              "raw": "{\n    \"nome\": \"Câmara Municipal de Leiria\",\n    \"email\": \"geral@cm-leiria.pt\",\n    \"password\": \"admin123\",\n    \"role\": \"ROLE_MUNICIPIO\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/registar",

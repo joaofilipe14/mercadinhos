@@ -42,7 +42,7 @@ export class LoginComponent {
     this.authService.login(email, password).subscribe({
       next: (res) => {
         this.toastService.show('Autenticação confirmada. Bem-vindo de volta!', 'success', 'Sessão Iniciada');
-        if (res.role === 'ROLE_MUNICIPO') {
+        if (res.role === 'ROLE_MUNICIPIO') {
           this.router.navigate(['/mercados']);
         } else if (res.role === 'ROLE_FEIRANTE') {
           this.router.navigate(['/mercados-vitrine']);

@@ -9,6 +9,7 @@ pt\devoteam\mercados\entity\enums\TipoPreco.class
 pt\devoteam\mercados\service\FeiranteService.class
 pt\devoteam\mercados\controller\MercadoController.class
 pt\devoteam\mercados\entity\enums\TipoInfraestrutura.class
+pt\devoteam\mercados\config\MinioConfig.class
 pt\devoteam\mercados\entity\Candidatura.class
 pt\devoteam\mercados\dto\FeiranteDTO.class
 pt\devoteam\mercados\config\RestClientConfig.class

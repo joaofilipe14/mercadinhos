@@ -3,7 +3,7 @@
   <!-- Cabeçalhos de Identidade Visual -->
   <div class="mb-8 border-b border-slate-100 pb-5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
     <div>
-      @if (currentUser()?.role === 'ROLE_MUNICIPO') {
+      @if (currentUser()?.role === 'ROLE_MUNICIPIO') {
       <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
           🏛️ Perfil Institucional / Autarquia
         </span>
@@ -40,7 +40,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-500 uppercase mb-2">
-              @if (currentUser()?.role === 'ROLE_MUNICIPO') { Nome do Município / Câmara }
+              @if (currentUser()?.role === 'ROLE_MUNICIPIO') { Nome do Município / Câmara }
               @else if (currentUser()?.role === 'ROLE_FEIRANTE') { Designação Comercial / Firma }
               @else { Nome Completo }
             </label>
@@ -53,11 +53,11 @@
           </div>
         </div>
 
-        @if (currentUser()?.role === 'ROLE_FEIRANTE' || currentUser()?.role === 'ROLE_MUNICIPO') {
+        @if (currentUser()?.role === 'ROLE_FEIRANTE' || currentUser()?.role === 'ROLE_MUNICIPIO') {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 animate-fade-in">
           <div>
             <label for="nif" class="block text-xs font-bold text-slate-500 uppercase mb-2">
-              {{ currentUser()?.role === 'ROLE_MUNICIPO' ? 'NIPC (NIF Autárquico)' : 'NIF / NIPC Comercial' }}
+              {{ currentUser()?.role === 'ROLE_MUNICIPIO' ? 'NIPC (NIF Autárquico)' : 'NIF / NIPC Comercial' }}
             </label>
             <input id="nif" type="text" formControlName="nif" class="input-field w-full" placeholder="Ex: 500123456" />
             @if (perfilForm.get('nif')?.invalid && perfilForm.get('nif')?.touched) {
@@ -66,7 +66,7 @@
           </div>
           <div>
             <label for="telemovel" class="block text-xs font-bold text-slate-500 uppercase mb-2">
-              {{ currentUser()?.role === 'ROLE_MUNICIPO' ? 'Telefone de Contacto Oficial' : 'Contacto Telefónico Móvel' }}
+              {{ currentUser()?.role === 'ROLE_MUNICIPIO' ? 'Telefone de Contacto Oficial' : 'Contacto Telefónico Móvel' }}
             </label>
             <input id="telemovel" type="text" formControlName="telemovel" class="input-field w-full" placeholder="Ex: 244123456" />
           </div>
@@ -74,7 +74,7 @@
 
         <div class="animate-fade-in">
           <label for="morada" class="block text-xs font-bold text-slate-500 uppercase mb-2">
-            {{ currentUser()?.role === 'ROLE_MUNICIPO' ? 'Morada dos Paços do Concelho' : 'Sede Social / Morada Fiscal' }}
+            {{ currentUser()?.role === 'ROLE_MUNICIPIO' ? 'Morada dos Paços do Concelho' : 'Sede Social / Morada Fiscal' }}
           </label>
           <input id="morada" type="text" formControlName="morada" class="input-field w-full" placeholder="Rua, Praça, Edifício e Código Postal" />
         </div>

@@ -20,7 +20,7 @@ public class Utilizador {
     @Column(nullable = false, length = 255)
     private String password;
 
-    // Guarda uma das 6 Roles: ROLE_ADMIN, ROLE_MUNICIPO, ROLE_JUNTA, ROLE_ORGANIZADOR, ROLE_FEIRANTE, ROLE_USER
+    // Guarda uma das 6 Roles: ROLE_ADMIN, ROLE_MUNICIPIO, ROLE_JUNTA, ROLE_ORGANIZADOR, ROLE_FEIRANTE, ROLE_USER
     @Column(nullable = false, length = 30)
     private String role;
 

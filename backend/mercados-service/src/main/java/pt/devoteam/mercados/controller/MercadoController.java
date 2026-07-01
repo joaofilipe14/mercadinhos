@@ -49,7 +49,7 @@ public class MercadoController {
             @RequestBody Mercado mercado,
             @RequestHeader(value = "X-User-Role", defaultValue = "ROLE_USER") String role,
             @RequestHeader(value = "X-User-Email", defaultValue = "anonym") String email) {
-        if (!role.equals("ROLE_MUNICIPO") && !role.equals("ROLE_JUNTA") && !role.equals("ROLE_ORGANIZADOR")) {
+        if (!role.equals("ROLE_MUNICIPIO") && !role.equals("ROLE_JUNTA") && !role.equals("ROLE_ORGANIZADOR")) {
             return ResponseEntity.status(403).body("Apenas autarquias ou organizadores autorizados podem criar feiras.");
         }
         Mercado mercadoSalvo = mercadoService.criarMercado(mercado, role, email);
@@ -61,7 +61,7 @@ public class MercadoController {
             @PathVariable Long id,
             @RequestBody Mercado mercadoAtualizado,
             @RequestHeader(value = "X-User-Role", defaultValue = "ROLE_USER") String role) {
-        if (!role.equals("ROLE_MUNICIPO") && !role.equals("ROLE_JUNTA")) {
+        if (!role.equals("ROLE_MUNICIPIO") && !role.equals("ROLE_JUNTA")) {
             return ResponseEntity.status(403).body("Sem permissões para editar feiras.");
         }
         try {

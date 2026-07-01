@@ -8,7 +8,8 @@ volumes:
   pgdata_mercados:
   pgdata_cidadaos:
   pgdata_pagamentos:
-  minio_data: # 🎯 CORRIGIDO: O volume do MinIO foi centralizado aqui no topo global
+  minio_data:
+  jenkins_data:
 
 services:
   # ==========================================
@@ -28,6 +29,11 @@ services:
       - mercadinhos-net
     volumes:
       - pgdata_pagamentos:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user_pagamentos -d db_pagamentos" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
   postgres-identidade:
     image: postgres:16-alpine
@@ -42,6 +48,11 @@ services:
       - mercadinhos-net
     volumes:
       - pgdata_identidade:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user_identidade -d db_identidade" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
   postgres-municipios:
     image: postgres:16-alpine
@@ -56,6 +67,11 @@ services:
       - mercadinhos-net
     volumes:
       - pgdata_municipios:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user_municipios -d db_municipios" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
   postgres-mercados:
     image: postgres:16-alpine
@@ -70,6 +86,11 @@ services:
       - mercadinhos-net
     volumes:
       - pgdata_mercados:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user_mercados -d db_mercados" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
   postgres-cidadaos:
     image: postgres:16-alpine
@@ -84,6 +105,11 @@ services:
       - mercadinhos-net
     volumes:
       - pgdata_cidadaos:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user_cidadaos -d db_cidadaos" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
   kafka:
     image: confluentinc/cp-kafka:7.6.0
@@ -137,7 +163,8 @@ services:
     networks:
       - mercadinhos-net
     depends_on:
-      - postgres-municipios
+      postgres-municipios:
+        condition: service_healthy
 
   mercados-service:
     build:
@@ -153,10 +180,15 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-mercados:5432/db_mercados
       - SPRING_DATASOURCE_USERNAME=user_mercados
       - SPRING_DATASOURCE_PASSWORD=pwd_mercados
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - MINIO_ENDPOINT=http://minio:9000
     networks:
       - mercadinhos-net
     depends_on:
-      - postgres-mercados
+      postgres-mercados:
+        condition: service_healthy
+      kafka:
+        condition: service_started
 
   cidadaos-service:
     build:
@@ -175,7 +207,8 @@ services:
     networks:
       - mercadinhos-net
     depends_on:
-      - postgres-cidadaos
+      postgres-cidadaos:
+        condition: service_healthy
 
   # ==========================================
   # 3. API GATEWAY & AUTH (IDENTIDADE)
@@ -194,13 +227,17 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-identidade:5432/db_identidade
       - SPRING_DATASOURCE_USERNAME=user_identidade
       - SPRING_DATASOURCE_PASSWORD=pwd_identidade
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - MERCADOS_SERVICE_URI=http://mercados-service:8082
+      - MUNICIPIOS_SERVICE_URI=http://municipios-service:8081
+      - CIDADAOS_SERVICE_URI=http://cidadaos-service:8083
+      - PAGAMENTOS_SERVICE_URI=http://pagamentos-service:8085
+      - MINIO_SERVICE_URI=http://minio:9000
     networks:
       - mercadinhos-net
     depends_on:
-      - postgres-identidade
-      - municipios-service
-      - mercados-service
-      - cidadaos-service
+      postgres-identidade:
+        condition: service_healthy
 
   notificacoes-service:
     build:
@@ -219,8 +256,10 @@ services:
     networks:
       - mercadinhos-net
     depends_on:
-      - kafka
-      - mailhog
+      kafka:
+        condition: service_started
+      mailhog:
+        condition: service_started
 
   pagamentos-service:
     build:
@@ -234,11 +273,16 @@ services:
       - "8085:8085"
     environment:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-pagamentos:5432/db_pagamentos
+      - SPRING_DATASOURCE_USERNAME=user_pagamentos
+      - SPRING_DATASOURCE_PASSWORD=pwd_pagamentos
     networks:
       - mercadinhos-net
     depends_on:
-      - kafka
-      - postgres-pagamentos
+      kafka:
+        condition: service_started
+      postgres-pagamentos:
+        condition: service_healthy
 
   # ==========================================
   # 4. FRONTEND (ANGULAR)
@@ -252,8 +296,6 @@ services:
       - "4200:80"
     networks:
       - mercadinhos-net
-    depends_on:
-      - identidade-service
 
   # ==========================================
   # 5. STORAGE CLOUD INTEGRATION (MinIO)
@@ -277,7 +319,8 @@ services:
     image: minio/mc:latest
     container_name: mercados-storage-initializer
     depends_on:
-      - minio
+      minio:
+        condition: service_started
     networks:
       - mercadinhos-net
     volumes:
@@ -305,3 +348,18 @@ services:
       echo '🟢 Configuração da Pasta Digital e CDN concluída com sucesso!';
       exit 0;
       "
+
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
+    container_name: feiras-cicd-jenkins
+    ports:
+      - "8089:8080" # Acedes ao painel do Jenkins em http://localhost:8089
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    user: root # Necessário para ter permissões sobre o socket do Docker

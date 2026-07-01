@@ -43,12 +43,12 @@ O ecossistema foi consolidado com sucesso numa arquitetura **Orientada a Eventos
 - [x] **Blindagem de Idempotência:** Validação na BD local bloqueando cobranças duplicadas em cliques rápidos com um `400 Bad Request`.
 - [x] **Interface Multi-Canal Estilo Stripe:** Checkout moderno no Angular com suporte e renderização condicional de abas para **Multibanco**, **Cartão de Crédito** e **Transferência Bancária SEPA**.
 - [x] **Desacoplamento de Storage (MinIO Cloud-Native):** Descodificação de fluxos Base64 em bytes no Java e armazenamento físico em buckets S3 (Público/Privado) gerenciados via API Gateway.
-- [x] **Dashboard de FinOps Autárquico:** Painel executivo reativo para o `ROLE_MUNICIPO` com métricas consolidadas de faturação prevista por data de feira, vagas e feirantes pendentes.
-
+- [x] **Dashboard de FinOps Autárquico:** Painel executivo reativo para o `ROLE_MUNICIPIO` com métricas consolidadas de faturação prevista por data de feira, vagas e feirantes pendentes.
+.
 ### 🛠️ Em Falta / Próximos Passos (Mapeado para as Próximas Iterações)
 - [ ] **Sistema de Favoritos Reativo (User-Level):** Adicionar um botão de "Estrela / Favorito" nos cartões de feiras do Cidadão autenticado. O clique persiste o vínculo no `cidadaos-service` e dispara um sinal de atualização visual.
 - [ ] **Priorização de Ordenação nas Queries (Bubble-Up):** Alterar o endpoint `@GetMapping` de listagem do `mercados-service` para intercetar o e-mail do utilizador e cruzar com os seus favoritos, fazendo com que as feiras favoritadas subam automaticamente para o topo da lista.
-- [ ] **Dashboard de FinOps Autárquico:** Painel executivo para o `ROLE_MUNICIPO` com métricas consolidadas de taxas cobradas, taxas pendentes e gráficos de rentabilidade por mercado/evento.
+- [ ] **Dashboard de FinOps Autárquico:** Painel executivo para o `ROLE_MUNICIPIO` com métricas consolidadas de taxas cobradas, taxas pendentes e gráficos de rentabilidade por mercado/evento.
 - [ ] **Mapa Interativo do Recinto:** Visualização espacial das bancas do mercado em formato de grelha CSS, permitindo aos feirantes verem a sua banca mudar para "Verde (Ocupado)" reativamente após o sucesso da Saga.
 - [ ] **Resiliência com Circuit Breaker:** Adicionar `@CircuitBreaker` do Resilience4j no Gateway para lidar com eventuais quedas súbitas do microsserviço de notificações.
 - [ ] **Internacionalização Avançada (i18n):** Configuração do `@angular/localize` para suporte multi-idioma (PT/EN), focando na inclusão de feirantes internacionais e turismo de feiras.

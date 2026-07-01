@@ -1,0 +1,59 @@
+jenkins:
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "adminpassword" # 🎯 A tua password de acesso
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+# 🎯 O MOTOR AUTOMÁTICO: Corrigido usando concatenação nativa do Groovy
+jobs:
+  - script: >
+      pipelineJob('e2e-tests') {
+          displayName('🛡️ Gatekeeper - Testes E2E (Selenium)')
+          description('Este Job corre sempre primeiro para validar o ecossistema global.')
+          definition {
+              cpsScm {
+                  scm {
+                      git {
+                          remote { url('https://github.com/o-teu-utilizador/o-teu-repositorio.git') }
+                          branches('*/main', '*/master')
+                      }
+                  }
+                  scriptPath('Jenkinsfile.e2e-tests')
+              }
+          }
+      }
+  - script: >
+      def servicos = [
+        'municipios-service', 
+        'mercados-service', 
+        'cidadaos-service', 
+        'notificacoes-service', 
+        'pagamentos-service', 
+        'identidade-service'
+      ]
+      
+      servicos.each { nomeDoServico ->
+          pipelineJob(nomeDoServico) {
+              // 🎯 CORRIGIDO: Usando ' + ' em vez de ${} para o JCasC não se baralhar
+              displayName('🔮 Dashboard - ' + nomeDoServico)
+              description('Pipeline de Testes e Cobertura para o modulo ' + nomeDoServico)
+              definition {
+                  cpsScm {
+                      scm {
+                          git {
+                              // ⚠️ ALERTA: Substitui pelo URL real do teu repositório Git
+                              remote { url('https://github.com/o-teu-utilizador/o-teu-repositorio.git') }
+                              branches('*/main', '*/master')
+                          }
+                      }
+                      // 🎯 CORRIGIDO: Caminho do ficheiro também concatenado com segurança
+                      scriptPath('Jenkinsfile.' + nomeDoServico)
+                  }
+              }
+          }
+      }

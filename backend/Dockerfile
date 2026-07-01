@@ -1,15 +1,25 @@
 # ==========================================
-# Execução Pura e Leve
+# ETAPA 1: Compilação isolada com JDK 21
 # ==========================================
-FROM eclipse-temurin:25-jre-alpine
+FROM maven:3.9-eclipse-temurin-21 AS builder
+ARG SERVICE_NAME
+WORKDIR /build
+
+# Copia o código fonte do backend para dentro do contentor
+COPY . .
+
+# Executa a compilação real gerando o JAR em Java 21
+RUN mvn -pl ${SERVICE_NAME} clean package -DskipTests
+
+# ==========================================
+# ETAPA 2: Imagem de execução leve com JRE 21
+# ==========================================
+FROM eclipse-temurin:21-jre-alpine
+ARG SERVICE_NAME
 WORKDIR /app
 
-RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
+# Vai buscar o JAR fresquinho gerado na Etapa 1
+COPY --from=builder /build/${SERVICE_NAME}/target/*.jar app.jar
 
-# Recebe o nome do microsserviço enviado pelo Docker Compose
-ARG SERVICE_NAME
-# Copia o JAR diretamente da pasta target local do teu computador
-COPY ${SERVICE_NAME}/target/*.jar app.jar
-
-ENTRYPOINT ["java", "-XX:+UseG1GC", "-jar", "app.jar"]
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]

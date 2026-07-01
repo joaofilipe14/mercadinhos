@@ -1,0 +1,8 @@
+INSERT INTO municipios (id, email, nome_camara, nif_autarquia, telefone_oficial, morada_pacos_concelho, brasao_url) VALUES
+                                                                                                                        (10, 'geral@cm-lisboa.pt', 'Câmara Municipal de Lisboa', '500000010', '213227000', 'Praça do Município, 1100-365 Lisboa', 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Lsb.png'),
+                                                                                                                        (11, 'contacto@cm-leiria.pt', 'Câmara Municipal de Leiria', '500000011', '244839500', 'Largo da República, 2414-006 Leiria', 'https://upload.wikimedia.org/wikipedia/commons/2/23/LRA1.png'),
+                                                                                                                        (12, 'urbanismo@cm-sintra.pt', 'Câmara Municipal de Sintra', '500000012', '219238500', 'Largo Dr. Virgílio Horta, 2710-501 Sintra', 'https://upload.wikimedia.org/wikipedia/commons/1/12/STN.png'),
+                                                                                                                        (13, 'eventos@cm-porto.pt', 'Câmara Municipal do Porto', '500000013', '222097000', 'Praça do General Humberto Delgado, 4000-286 Porto', 'https://upload.wikimedia.org/wikipedia/commons/6/6e/PRT.png'),
+                                                                                                                        (14, 'geral@cm-braga.pt', 'Câmara Municipal de Braga', '500000014', '253616060', 'Praça do Município, 4700-435 Braga', 'https://upload.wikimedia.org/wikipedia/commons/a/a7/BRG1.png')
+-- 🛡️ BLINDAGEM MÁXIMA CONTRA REARRANQUES DO DOCKER:
+    ON CONFLICT (id) DO NOTHING;

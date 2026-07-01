@@ -13,11 +13,9 @@
     <div class="grid grid-cols-1 md:grid-cols-5 gap-6 overflow-y-auto pr-1 flex-1 my-2">
 
       <div class="md:col-span-3 space-y-6">
-
         <div>
           <label class="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2.5">1. Categoria Profissional</label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
             <div (click)="atividadeSelecionada.set('ARTESANATO')"
                  [class.border-brand-primary]="atividadeSelecionada() === 'ARTESANATO'"
                  [class.bg-blue-50/30]="atividadeSelecionada() === 'ARTESANATO'"
@@ -47,7 +45,6 @@
     <div>
       <label class="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2.5">2. Tipo de Infraestrutura (Espaço Físico)</label>
       <div class="space-y-3">
-
         <div (click)="infraestruturaSelecionada.set('PROPRIO')"
              [class.border-brand-primary]="infraestruturaSelecionada() === 'PROPRIO'"
              [class.bg-blue-50/30]="infraestruturaSelecionada() === 'PROPRIO'"
@@ -74,7 +71,7 @@
         <input type="radio" name="infraestrutura" [checked]="infraestruturaSelecionada() === 'ORGANIZACAO'" class="accent-brand-primary w-4 h-4">
         <div>
           <p class="text-xs font-bold text-slate-700">Alugar Banca de Madeira da Câmara</p>
-          <p class="text-[11px] text-slate-400">Módulo chave-na-mão cedido pelo Município (2.5x2.5m).</p>
+          <p class="text-[11px] text-slate-400">Módulo chave-na-mão cedido pelo @concelho.</p>
         </div>
       </div>
       <div class="text-right">
@@ -104,7 +101,6 @@
 </div>
 
 <div class="md:col-span-2 flex flex-col justify-between space-y-6 border-t md:border-t-0 md:border-l border-slate-100 pt-6 md:pt-0 md:pl-6">
-
   <div class="space-y-4">
     <label class="block text-xs font-black text-slate-400 uppercase tracking-wider">3. Upload do Dossiê Jurídico</label>
 
@@ -119,20 +115,46 @@
       <div class="flex items-start justify-between gap-2">
         <div>
           <p class="text-[11px] font-black text-slate-700 leading-tight">{{ extrairNomeLegivel(doc) }}</p>
+
+          @if (documentosPerfilExistentes().includes(doc) && !dossieFicheiros()[doc]) {
+          <p class="text-[9px] text-blue-600 font-bold uppercase tracking-wider mt-0.5 flex items-center gap-1">💼 Arquivado no seu Perfil</p>
+          } @else {
           <p class="text-[9px] text-rose-500 font-bold uppercase tracking-wider mt-0.5">Obrigatório</p>
+          }
         </div>
 
         @if (dossieFicheiros()[doc]) {
-        <span class="text-xs bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">✓ Carregado</span>
+        <span class="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 px-2 py-0.5 rounded-md font-bold">⚠️ Substituído</span>
+        } @else if (documentosPerfilExistentes().includes(doc)) {
+        <span class="text-[10px] bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-md font-bold">✓ Pronto</span>
         }
       </div>
 
       <div class="relative w-full">
         <input type="file" accept="application/pdf" (change)="onFileSelected($event, doc)" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10">
-        <div class="w-full bg-slate-50 border border-dashed border-slate-200 text-center py-2 px-3 rounded-lg text-[11px] font-bold text-slate-500 hover:bg-slate-100 transition-colors">
-          {{ dossieFicheiros()[doc] ? '📎 Substituir PDF (' + dossieFicheiros()[doc].name.substring(0,12) + '...)' : '📤 Escolher Ficheiro PDF' }}
+
+        <div [ngClass]="{
+                     'bg-blue-50/20 border-blue-200 text-blue-600 hover:bg-blue-50/50': documentosPerfilExistentes().includes(doc) && !dossieFicheiros()[doc],
+                     'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100': !documentosPerfilExistentes().includes(doc) || dossieFicheiros()[doc]
+                   }"
+             class="w-full border border-dashed text-center py-2 px-3 rounded-lg text-[11px] font-bold transition-colors">
+
+          @if (dossieFicheiros()[doc]) {
+          📎 Substituir PDF ({{ dossieFicheiros()[doc].name.substring(0,12) }}...)
+          } @else if (documentosPerfilExistentes().includes(doc)) {
+          🔄 Alterar Ficheiro do Perfil (Manter Atual)
+          } @else {
+          📤 Escolher Ficheiro PDF
+          }
         </div>
       </div>
+
+      @if (documentosPerfilExistentes().includes(doc) && dossieFicheiros()[doc]) {
+      <label class="flex items-center gap-2 mt-1 cursor-pointer text-[10px] font-black text-blue-600 bg-blue-50/40 border border-blue-100 rounded-lg p-2 select-none animate-fade-in">
+        <input type="checkbox" [checked]="sincronizarComPerfil()[doc]" (change)="toggleSincronizacao(doc)" class="accent-blue-600 rounded w-3.5 h-3.5">
+        <span>🔄 Atualizar também no meu Perfil de Feirante</span>
+      </label>
+      }
     </div>
     }
   </div>
@@ -161,6 +183,7 @@
       <button (click)="onFechar.emit()" [disabled]="isSubmetendo()" class="w-1/3 bg-slate-100 text-slate-600 text-xs font-black uppercase py-3 rounded-xl hover:bg-slate-200 transition-colors">
         Sair
       </button>
+
       <button (click)="enviarCandidatura()"
               [disabled]="!validarDossieCompleto() || isSubmetendo()"
               [class.bg-slate-300]="!validarDossieCompleto() || isSubmetendo()"

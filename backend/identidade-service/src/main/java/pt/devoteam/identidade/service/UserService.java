@@ -38,7 +38,7 @@ public class UserService {
         Utilizador utilizador = new Utilizador();
         utilizador.setEmail(dto.getEmail());
         utilizador.setPassword(passwordEncoder.encode(dto.getPassword()));
-        utilizador.setRole(dto.getRole()); // Ex: ROLE_FEIRANTE, ROLE_MUNICIPO, etc.
+        utilizador.setRole(dto.getRole());
         utilizador.setAtivo(true);
         Utilizador utilizadorSalvo = utilizadorRepository.save(utilizador);
         try {
@@ -48,7 +48,7 @@ public class UserService {
                 // O Kafka recebe uma String e o StringSerializer faz o trabalho sem reclamar
                 kafkaTemplate.send("feirante-registado-topic", payloadJson);
                 System.out.println("🟢 [Kafka] Evento de sincronização emitido com sucesso: " + payloadJson);
-            } else if ("ROLE_MUNICIPO".equalsIgnoreCase(dto.getRole())) {
+            } else if ("ROLE_MUNICIPIO".equalsIgnoreCase(dto.getRole())) {
                 // 🎯 NOVO: Envia para o microsserviço de municípios
                 kafkaTemplate.send("municipio-registado-topic", payloadJson);
                 System.out.println("🟢 [Kafka] Evento de Município emitido para o topico institucional.");

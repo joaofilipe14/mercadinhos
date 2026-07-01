@@ -1,6 +1,6 @@
-C:\mercadinhos\backend\notificacoes-service\src\main\java\pt\devoteam\pagamentos\event\CandidaturaAprovadaEvent.java
-C:\mercadinhos\backend\notificacoes-service\src\main\java\pt\devoteam\pagamentos\event\PerfilAtivadoEvent.java
-C:\mercadinhos\backend\notificacoes-service\src\main\java\pt\devoteam\pagamentos\event\UtilizadorRegistadoEvent.java
-C:\mercadinhos\backend\notificacoes-service\src\main\java\pt\devoteam\pagamentos\kafka\NotificacaoKafkaListener.java
-C:\mercadinhos\backend\notificacoes-service\src\main\java\pt\devoteam\pagamentos\NotificacoesApplication.java
-C:\mercadinhos\backend\notificacoes-service\src\main\java\pt\devoteam\pagamentos\service\EmailService.java
+C:\feirasonline.pt\backend\notificacoes-service\src\main\java\pt\devoteam\pagamentos\event\CandidaturaAprovadaEvent.java
+C:\feirasonline.pt\backend\notificacoes-service\src\main\java\pt\devoteam\pagamentos\event\PerfilAtivadoEvent.java
+C:\feirasonline.pt\backend\notificacoes-service\src\main\java\pt\devoteam\pagamentos\event\UtilizadorRegistadoEvent.java
+C:\feirasonline.pt\backend\notificacoes-service\src\main\java\pt\devoteam\pagamentos\kafka\NotificacaoKafkaListener.java
+C:\feirasonline.pt\backend\notificacoes-service\src\main\java\pt\devoteam\pagamentos\NotificacoesApplication.java
+C:\feirasonline.pt\backend\notificacoes-service\src\main\java\pt\devoteam\pagamentos\service\EmailService.java
